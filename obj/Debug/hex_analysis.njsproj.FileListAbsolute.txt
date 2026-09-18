@@ -1,0 +1,3 @@
+C:\Users\wills\Desktop\Shortcuts\Files\Github\hex_analysis\hex_analysis\obj\Debug\hex_analysis.njsproj.AssemblyReference.cache
+C:\Users\wills\Desktop\Shortcuts\Files\Github\hex_analysis\hex_analysis\obj\Debug\hex_analysis.njsproj.CoreCompileInputs.cache
+C:\Users\wills\Desktop\Shortcuts\Files\Github\hex_analysis\hex_analysis\bin\Microsoft.NodejsTools.WebRole.dll
