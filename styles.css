@@ -22,14 +22,65 @@ input[type="file"] {
     margin-bottom: 12px;
 }
 
-pre {
-    background: #111;
+.table-wrap {
+    overflow-x: auto;
     border: 1px solid #333;
     border-radius: 6px;
-    padding: 16px;
-    overflow-x: auto;
+}
+
+table {
+    border-collapse: collapse;
     font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
     font-size: 13px;
-    line-height: 1.5;
+    background: #111;
+    width: 100%;
+}
+
+th, td {
+    padding: 3px 6px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+thead th {
+    color: #888;
+    border-bottom: 1px solid #333;
+    position: sticky;
+    top: 0;
+    background: #111;
+}
+
+tbody tr:nth-child(even) {
+    background: #161616;
+}
+
+.offset {
+    color: #666;
+    text-align: right;
+    border-right: 1px solid #333;
+    padding-right: 10px;
+}
+
+.hex-byte {
+    width: 24px;
+    color: #ddd;
+}
+
+    .hex-byte.zero {
+        color: #555;
+    }
+
+.ascii {
+    text-align: left;
+    padding-left: 12px;
+    border-left: 1px solid #333;
+    color: #9cdcfe;
     white-space: pre;
+}
+
+#placeholder {
+    padding: 16px;
+    color: #666;
+    font-family: "SFMono-Regular", Consolas, Menlo, monospace;
+    font-size: 13px;
 }
