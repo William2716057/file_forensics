@@ -7,37 +7,55 @@
 </head>
 <body>
 
-    <h1>Hex Dump Viewer</h1>
+    <h1>File Forensics</h1>
     <input type="file" id="fileInput" />
     <div id="meta"></div>
 
-    <div class="table-wrap">
-        <table id="hexTable" style="display: none;">
-            <thead>
-                <tr>
-                    <th>Offset</th>
-                    <th>00</th>
-                    <th>01</th>
-                    <th>02</th>
-                    <th>03</th>
-                    <th>04</th>
-                    <th>05</th>
-                    <th>06</th>
-                    <th>07</th>
-                    <th>08</th>
-                    <th>09</th>
-                    <th>0A</th>
-                    <th>0B</th>
-                    <th>0C</th>
-                    <th>0D</th>
-                    <th>0E</th>
-                    <th>0F</th>
-                    <th>ASCII</th>
-                </tr>
-            </thead>
-            <tbody id="hexBody"></tbody>
-        </table>
-        <div id="placeholder">Choose a file to see its hex dump here.</div>
+    <div class="layout">
+        <div class="main-col">
+            <div class="toolbar">
+                <button id="deleteByteBtn" disabled>Delete Byte</button>
+                <button id="editByteBtn" disabled>Edit Byte</button>
+                <button id="placeholder1Btn" disabled></button>
+                <button id="placeholder2Btn" disabled></button>
+            </div>
+
+            <div class="table-wrap">
+                <table id="hexTable" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th>Offset</th>
+                            <th>00</th>
+                            <th>01</th>
+                            <th>02</th>
+                            <th>03</th>
+                            <th>04</th>
+                            <th>05</th>
+                            <th>06</th>
+                            <th>07</th>
+                            <th>08</th>
+                            <th>09</th>
+                            <th>0A</th>
+                            <th>0B</th>
+                            <th>0C</th>
+                            <th>0D</th>
+                            <th>0E</th>
+                            <th>0F</th>
+                            <th>ASCII</th>
+                        </tr>
+                    </thead>
+                    <tbody id="hexBody"></tbody>
+                </table>
+                <div id="placeholder">Choose a file to see its hex dump here.</div>
+            </div>
+        </div>
+
+        <div class="meta-panel">
+            <h2>File Metadata</h2>
+            <div id="metaPanelContent">
+                <div class="meta-empty">No file loaded.</div>
+            </div>
+        </div>
     </div>
 
 
