@@ -2,7 +2,7 @@ let currentBytes = [];
 let selectedIndex = null;
 
 //list of magic numbers (change to separate page)
-const FILE_SIGNATURES = [
+const FILE_SIGNATURES = [ //fix weak detections
     { type: "PNG image", offset: 0, bytes: ["89", "50", "4e", "47", "0d", "0a", "1a", "0a"] },
     { type: "JPEG image", offset: 0, bytes: ["ff", "d8", "ff"] },
     { type: "GIF image (87a/89a)", offset: 0, bytes: ["47", "49", "46", "38"] },
@@ -149,6 +149,7 @@ function renderTable() {
     updateToolbarState();
 }
 
+//find better way to manage larger files 
 function selectByte(idx) {
     selectedIndex = (selectedIndex === idx) ? null : idx;
     renderTable();
@@ -160,6 +161,7 @@ function updateToolbarState() {
     document.getElementById("editByteBtn").disabled = !hasSelection;
 }
 
+//remove or leave byte location
 function deleteSelectedByte() {
     if (selectedIndex === null) return;
     currentBytes.splice(selectedIndex, 1);
@@ -167,6 +169,8 @@ function deleteSelectedByte() {
     renderTable();
     updateMeta();
 }
+
+//repeat delete function with insert byte function
 
 function editSelectedByte() {
     if (selectedIndex === null) return;
@@ -191,7 +195,7 @@ function updateMeta() {
     }
 }
 
-function onByteDoubleClick(event) {
+function onByteDoubleClick(event) { //edit to allow doubleclick on multiple values
     const clickedValue = event.currentTarget.dataset.value;
 
     // Clear previous matches
