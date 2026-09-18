@@ -33,7 +33,7 @@ table {
     font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
     font-size: 13px;
     background: #111;
-    width: 100%;
+    width: max-content;
 }
 
 th, td {
@@ -55,6 +55,8 @@ tbody tr:nth-child(even) {
 }
 
 .offset {
+    width: 1%;
+    white-space: nowrap;
     color: #666;
     text-align: left;
     border-right: 1px solid #333;
