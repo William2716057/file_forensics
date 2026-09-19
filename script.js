@@ -193,10 +193,12 @@ function selectByte(idx) {
     updateToolbarState();
 }
 
+//buttons
 function updateToolbarState() {
     const hasSelection = selectedIndex !== null && selectedIndex < currentBytes.length;
     document.getElementById("deleteByteBtn").disabled = !hasSelection;
     document.getElementById("editByteBtn").disabled = !hasSelection;
+    document.getElementById("insertByteBtn").disabled = !hasSelection;
 }
 
 //remove or leave byte location
@@ -225,6 +227,43 @@ function deleteSelectedByte() {
     renderMetaPanel(currentFile, currentBytes);
 }
 //repeat delete function with insert byte function
+
+function insertByteAtSelection() {
+    if (selectedIndex === null) return;
+
+    const input = window.prompt("Enter hex byte value to insert (00-FF):", "00");
+    if (input === null) return;
+
+    const cleaned = input.trim().replace(/^0x/i, "");
+    if (!/^[0-9a-fA-F]{1,2}$/.test(cleaned)) {
+        window.alert("Please enter a valid hex byte, e.g. \"1A\" or \"FF\".");
+        return;
+    }
+
+    // Create a new Uint8Array that is one byte larger.
+    const newBytes = new Uint8Array(currentBytes.length + 1);
+
+    // Copy everything before the selected position.
+    newBytes.set(currentBytes.subarray(0, selectedIndex), 0);
+
+    // Place the new byte at the selected position.
+    newBytes[selectedIndex] = parseInt(cleaned, 16);
+
+    // Copy the selected byte and everything after it, shifted one place right.
+    newBytes.set(
+        currentBytes.subarray(selectedIndex),
+        selectedIndex + 1
+    );
+
+    currentBytes = newBytes;
+
+    // selectedIndex is unchanged, so it now points at the inserted byte.
+    renderTable();
+    updateMeta();
+    renderMetaPanel(currentFile, currentBytes);
+}
+
+
 
 function editSelectedByte() {
     if (selectedIndex === null) return;
@@ -311,3 +350,4 @@ hexBody.addEventListener("dblclick", onByteDoubleClick);
 
 document.getElementById("deleteByteBtn").addEventListener("click", deleteSelectedByte);
 document.getElementById("editByteBtn").addEventListener("click", editSelectedByte);
+document.getElementById("insertByteBtn").addEventListener("click", insertByteAtSelection);
