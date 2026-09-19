@@ -1,5 +1,12 @@
-let currentBytes = [];
+
+//let currentBytes = [];
 let selectedIndex = null;
+let currentBytes = new Uint8Array();
+//metadata panel can be re-rendered after edits
+let currentFile = null;
+//now state so it survives re-renders
+let highlightValue = null;
+
 
 //list of magic numbers (change to separate page)
 const FILE_SIGNATURES = [ //fix weak detections
@@ -27,7 +34,8 @@ function detectFileType(byteArray) {
         const end = start + sig.bytes.length;
         if (byteArray.length < end) continue;
 
-        const slice = byteArray.slice(start, end).map(b => b.toString(16).padStart(2, "0"));
+        const slice = Array.from(byteArray.slice(start, end))
+            .map(b => b.toString(16).padStart(2, "0"));
         const isMatch = sig.bytes.every((b, i) => slice[i] === b);
         if (isMatch) return sig.type;
     }
@@ -46,6 +54,10 @@ function formatBytes(size) {
     return `${val.toFixed(1)} ${units[unitIndex]}`;
 }
 
+//escape text before putting it in innerHTML
+const esc = s => String(s).replace(/[&<>"']/g, c =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
 function renderMetaPanel(file, byteArray) {
     const container = document.getElementById("metaPanelContent");
 
@@ -56,16 +68,20 @@ function renderMetaPanel(file, byteArray) {
 
     const detectedType = detectFileType(byteArray);
     const lastModified = new Date(file.lastModified);
-    const firstBytesHex = byteArray.slice(0, 8)
-        .map(b => b.toString(16).padStart(2, "0"))
-        .join(" ");
+    //const firstBytesHex = byteArray.slice(0, 8)
+    //   .map(b => b.toString(16).padStart(2, "0"))
+    //  .join(" ");
 
+    const hex2 = b => b.toString(16).padStart(2, "0");
+    const firstBytesHex = Array.from(byteArray.subarray(0, 8), hex2).join(" ");
+
+    // FIX: file.name and file.type escaped; size uses byteArray.length so it reflects edits
     container.innerHTML = `
     <div class="meta-section">
       <h3>Basic Info</h3>
-      <div class="meta-row"><span class="meta-label">Name</span><span class="meta-value">${file.name}</span></div>
-      <div class="meta-row"><span class="meta-label">Size</span><span class="meta-value">${formatBytes(file.size)} (${file.size.toLocaleString()} B)</span></div>
-      <div class="meta-row"><span class="meta-label">MIME type</span><span class="meta-value">${file.type || '<span class="meta-value unknown">unreported</span>'}</span></div>
+      <div class="meta-row"><span class="meta-label">Name</span><span class="meta-value">${esc(file.name)}</span></div>
+      <div class="meta-row"><span class="meta-label">Size</span><span class="meta-value">${formatBytes(byteArray.length)} (${byteArray.length.toLocaleString()} B)</span></div>
+      <div class="meta-row"><span class="meta-label">MIME type</span><span class="meta-value">${file.type ? esc(file.type) : '<span class="meta-value unknown">unreported</span>'}</span></div>
       <div class="meta-row"><span class="meta-label">Modified</span><span class="meta-value">${lastModified.toLocaleString()}</span></div>
     </div>
     <div class="meta-section">
@@ -81,18 +97,28 @@ function renderMetaPanel(file, byteArray) {
 
 function hexdumpRows(byteArray) {
     const rows = [];
+
     for (let i = 0; i < byteArray.length; i += 16) {
         const chunk = byteArray.slice(i, i + 16);
-        const hexBytes = chunk.map(b => b.toString(16).padStart(2, "0"));
-        const ascii = chunk
-            .map(b => (b >= 32 && b <= 126) ? String.fromCharCode(b) : ".")
+
+        // Convert Uint8Array to a normal Array so map() can produce strings.
+        const hexBytes = Array.from(chunk)
+            .map(b => b.toString(16).padStart(2, "0"));
+
+        const ascii = Array.from(chunk)
+            .map(b => (b >= 32 && b <= 126)
+                ? String.fromCharCode(b)
+                : "."
+            )
             .join("");
+
         rows.push({
             offset: i.toString(16).padStart(8, "0"),
             hexBytes,
             ascii
         });
     }
+
     return rows;
 }
 
@@ -124,10 +150,13 @@ function renderTable() {
                 const idx = absoluteIndex;
                 td.dataset.value = val;
                 td.dataset.index = idx;
-                td.addEventListener("click", () => selectByte(idx));
-                td.addEventListener("dblclick", onByteDoubleClick);
+                // click/dblclick are delegated on tbody (bottom of file)
                 if (idx === selectedIndex) {
                     td.classList.add("selected");
+                }
+                //survives re-renders
+                if (val === highlightValue) {
+                    td.classList.add("match");
                 }
                 absoluteIndex++;
             }
@@ -151,8 +180,17 @@ function renderTable() {
 
 //find better way to manage larger files 
 function selectByte(idx) {
+    const tbody = document.getElementById("hexBody");
+    if (selectedIndex !== null) {
+        const old = tbody.querySelector(`.hex-byte[data-index="${selectedIndex}"]`);
+        if (old) old.classList.remove("selected");
+    }
     selectedIndex = (selectedIndex === idx) ? null : idx;
-    renderTable();
+    if (selectedIndex !== null) {
+        const cell = tbody.querySelector(`.hex-byte[data-index="${selectedIndex}"]`);
+        if (cell) cell.classList.add("selected");
+    }
+    updateToolbarState();
 }
 
 function updateToolbarState() {
@@ -164,12 +202,28 @@ function updateToolbarState() {
 //remove or leave byte location
 function deleteSelectedByte() {
     if (selectedIndex === null) return;
-    currentBytes.splice(selectedIndex, 1);
+
+    // Create a new Uint8Array that is one byte smaller.
+    const newBytes = new Uint8Array(currentBytes.length - 1);
+
+    // Copy everything before the selected byte.
+    newBytes.set(currentBytes.subarray(0, selectedIndex), 0);
+
+    // Copy everything after the selected byte.
+    newBytes.set(
+        currentBytes.subarray(selectedIndex + 1),
+        selectedIndex
+    );
+
+    currentBytes = newBytes;
+
     selectedIndex = null;
+
     renderTable();
     updateMeta();
+    //refresh the metadata panel so size/type/first bytes match the edited data
+    renderMetaPanel(currentFile, currentBytes);
 }
-
 //repeat delete function with insert byte function
 
 function editSelectedByte() {
@@ -186,6 +240,7 @@ function editSelectedByte() {
 
     currentBytes[selectedIndex] = parseInt(cleaned, 16);
     renderTable();
+    renderMetaPanel(currentFile, currentBytes);
 }
 
 function updateMeta() {
@@ -196,14 +251,20 @@ function updateMeta() {
 }
 
 function onByteDoubleClick(event) { //edit to allow doubleclick on multiple values
-    const clickedValue = event.currentTarget.dataset.value;
+    const td = event.target.closest(".hex-byte[data-index]");
+    if (!td) return;
+
+    const idx = Number(td.dataset.index);
+    if (selectedIndex !== idx) selectByte(idx);
+
+    highlightValue = td.dataset.value;
 
     // Clear previous matches
     document.querySelectorAll(".hex-byte.match").forEach(el => el.classList.remove("match"));
 
     // Highlight every cell with the same hex value
     document.querySelectorAll(".hex-byte").forEach(el => {
-        if (el.dataset.value === clickedValue) {
+        if (el.dataset.value === highlightValue) {
             el.classList.add("match");
         }
     });
@@ -222,9 +283,11 @@ fileInput.addEventListener("change", (event) => {
     const reader = new FileReader();
 
     reader.onload = (e) => {
-        currentBytes = Array.from(new Uint8Array(e.target.result));
+        currentBytes = new Uint8Array(e.target.result);
         currentFileName = file.name;
+        currentFile = file; //remember the file for later metadata re-renders
         selectedIndex = null;
+        highlightValue = null; //clear highlight from the previous file
         renderTable();
         renderMetaPanel(file, currentBytes);
         metaEl.textContent = `${file.name} — ${currentBytes.length.toLocaleString()} bytes`;
@@ -237,6 +300,14 @@ fileInput.addEventListener("change", (event) => {
 
     reader.readAsArrayBuffer(file);
 });
+
+//event delegation, one click and one dblclick listener on tbody
+const hexBody = document.getElementById("hexBody");
+hexBody.addEventListener("click", (e) => {
+    const td = e.target.closest(".hex-byte[data-index]");
+    if (td) selectByte(Number(td.dataset.index));
+});
+hexBody.addEventListener("dblclick", onByteDoubleClick);
 
 document.getElementById("deleteByteBtn").addEventListener("click", deleteSelectedByte);
 document.getElementById("editByteBtn").addEventListener("click", editSelectedByte);
