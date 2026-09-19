@@ -239,6 +239,8 @@ function updateToolbarState() {
     document.getElementById("insertByteBtn").disabled = !hasSelection;
     document.getElementById("saveBtn").disabled = currentBytes.length === 0;
     document.getElementById("saveMode").disabled = currentBytes.length === 0;
+    document.getElementById("shiftLeftBtn").disabled = currentBytes.length === 0;
+    document.getElementById("shiftRightBtn").disabled = currentBytes.length === 0;
 }
 
 //remove or leave byte location
@@ -322,6 +324,30 @@ function editSelectedByte() {
     currentBytes.fill(parseInt(cleaned, 16), selectedIndex, selectionEnd + 1);
     renderTable();
     renderMetaPanel(currentFile, currentBytes);
+}
+
+function shiftBits(direction) {
+    if (currentBytes.length === 0) return;
+
+    const start = selectedIndex !== null ? selectedIndex : 0;
+    const end = selectedIndex !== null ? selectionEnd : currentBytes.length - 1;
+
+    if (direction < 0) {
+        // Left: walk forward so each byte can still read its unmodified right neighbour
+        for (let i = start; i <= end; i++) {
+            const next = i < end ? currentBytes[i + 1] : 0;
+            currentBytes[i] = ((currentBytes[i] << 1) | (next >> 7)) & 0xFF;
+        }
+    } else {
+        // Right: walk backward so each byte can still read its unmodified left neighbour
+        for (let i = end; i >= start; i--) {
+            const prev = i > start ? currentBytes[i - 1] : 0;
+            currentBytes[i] = ((currentBytes[i] >> 1) | ((prev & 1) << 7)) & 0xFF;
+        }
+    }
+
+    renderTable();
+    renderMetaPanel(currentFile, currentBytes); // detected type and first bytes can change
 }
 
 function updateMeta() {
@@ -473,3 +499,5 @@ document.getElementById("insertByteBtn").addEventListener("click", insertByteAtS
 document.getElementById("saveBtn").addEventListener("click", saveFile);
 document.getElementById("hexViewBtn").addEventListener("click", () => setViewMode("hex"));
 document.getElementById("binViewBtn").addEventListener("click", () => setViewMode("bin"));
+document.getElementById("shiftLeftBtn").addEventListener("click", () => shiftBits(-1));
+document.getElementById("shiftRightBtn").addEventListener("click", () => shiftBits(1));
