@@ -221,6 +221,8 @@ function updateToolbarState() {
     document.getElementById("deleteByteBtn").disabled = !hasSelection;
     document.getElementById("editByteBtn").disabled = !hasSelection;
     document.getElementById("insertByteBtn").disabled = !hasSelection;
+    document.getElementById("saveBtn").disabled = currentBytes.length === 0;
+    document.getElementById("saveMode").disabled = currentBytes.length === 0;
 }
 
 //remove or leave byte location
@@ -343,6 +345,37 @@ function setPatternFromRange(a, b) {
     applyHighlight();
 }
 
+function downloadBlob(data, filename, mime) {
+    const blob = new Blob([data], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = Object.assign(document.createElement("a"), { href: url, download: filename });
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+// Same layout as the on-screen dump: offset, 16 hex bytes, ASCII
+function hexDumpText() {
+    return hexdumpRows(currentBytes).map(row => {
+        const hex = row.hexBytes.join(" ").padEnd(16 * 3 - 1, " "); // pad the last short row so ASCII lines up
+        return `${row.offset}  ${hex}  ${row.ascii}`;
+    }).join("\n") + "\n";
+}
+
+function saveFile() {
+    if (currentBytes.length === 0) return;
+    const mode = document.getElementById("saveMode").value;
+
+    if (mode === "reversed") {
+        // slice() copies first so the bytes on screen aren't reversed too
+        downloadBlob(currentBytes.slice().reverse(), "reversed_" + currentFileName, "application/octet-stream");
+    } else {
+        downloadBlob(hexDumpText(), currentFileName + ".hex.txt", "text/plain");
+    }
+}
+
+
 const fileInput = document.getElementById("fileInput");
 const metaEl = document.getElementById("meta");
 let currentFileName = "";
@@ -417,6 +450,8 @@ document.addEventListener("keydown", (e) => {
     }
 });
 
+//listeners 
 document.getElementById("deleteByteBtn").addEventListener("click", deleteSelectedByte);
 document.getElementById("editByteBtn").addEventListener("click", editSelectedByte);
 document.getElementById("insertByteBtn").addEventListener("click", insertByteAtSelection);
+document.getElementById("saveBtn").addEventListener("click", saveFile);

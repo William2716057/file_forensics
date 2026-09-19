@@ -218,3 +218,17 @@ tbody tr:nth-child(even) {
 .table-wrap {
     user-select: none;
 }
+
+.toolbar select {
+    background: #2a2a2a;
+    color: #ddd;
+    border: 1px solid #444;
+    border-radius: 4px;
+    padding: 6px 8px;
+    font-size: 13px;
+    font-family: inherit;
+}
+
+    .toolbar select:disabled {
+        color: #555;
+    }
