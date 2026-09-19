@@ -204,3 +204,8 @@ tbody tr:nth-child(even) {
 .meta-value.unknown {
     color: #666;
 }
+
+.ascii-char.selected {
+    background: #e0a030;
+    color: #111;
+}

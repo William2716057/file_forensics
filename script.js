@@ -94,7 +94,7 @@ function renderMetaPanel(file, byteArray) {
     </div>
   `;
 }
-
+//get hexdumo
 function hexdumpRows(byteArray) {
     const rows = [];
 
@@ -133,7 +133,7 @@ function renderTable() {
     const frag = document.createDocumentFragment();
     let absoluteIndex = 0;
 
-    rows.forEach(row => {
+    rows.forEach((row, rowIdx) => {
         const tr = document.createElement("tr");
 
         const offsetTd = document.createElement("td");
@@ -150,7 +150,6 @@ function renderTable() {
                 const idx = absoluteIndex;
                 td.dataset.value = val;
                 td.dataset.index = idx;
-                // click/dblclick are delegated on tbody (bottom of file)
                 if (idx === selectedIndex) {
                     td.classList.add("selected");
                 }
@@ -165,7 +164,16 @@ function renderTable() {
 
         const asciiTd = document.createElement("td");
         asciiTd.className = "ascii";
-        asciiTd.textContent = row.ascii;
+        // One span per character so each can be highlighted individually
+        for (let i = 0; i < row.ascii.length; i++) {
+            const span = document.createElement("span");
+            const idx = rowIdx * 16 + i;
+            span.className = "ascii-char";
+            span.dataset.index = idx;
+            span.textContent = row.ascii[i];
+            if (idx === selectedIndex) span.classList.add("selected");
+            asciiTd.appendChild(span);
+        }
         tr.appendChild(asciiTd);
 
         frag.appendChild(tr);
@@ -182,13 +190,13 @@ function renderTable() {
 function selectByte(idx) {
     const tbody = document.getElementById("hexBody");
     if (selectedIndex !== null) {
-        const old = tbody.querySelector(`.hex-byte[data-index="${selectedIndex}"]`);
-        if (old) old.classList.remove("selected");
+        tbody.querySelectorAll(`[data-index="${selectedIndex}"]`)
+            .forEach(el => el.classList.remove("selected"));
     }
     selectedIndex = (selectedIndex === idx) ? null : idx;
     if (selectedIndex !== null) {
-        const cell = tbody.querySelector(`.hex-byte[data-index="${selectedIndex}"]`);
-        if (cell) cell.classList.add("selected");
+        tbody.querySelectorAll(`[data-index="${selectedIndex}"]`)
+            .forEach(el => el.classList.add("selected"));
     }
     updateToolbarState();
 }
@@ -347,6 +355,11 @@ hexBody.addEventListener("click", (e) => {
     if (td) selectByte(Number(td.dataset.index));
 });
 hexBody.addEventListener("dblclick", onByteDoubleClick);
+
+hexBody.addEventListener("click", (e) => {
+    const span = e.target.closest(".ascii-char");
+    if (span) selectByte(Number(span.dataset.index));
+});
 
 document.getElementById("deleteByteBtn").addEventListener("click", deleteSelectedByte);
 document.getElementById("editByteBtn").addEventListener("click", editSelectedByte);
