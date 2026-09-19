@@ -4,7 +4,9 @@ let currentBytes = new Uint8Array();
 //metadata panel can be re-rendered after edits
 let currentFile = null;
 //now state so it survives re-renders
-let highlightValue = null;
+let highlightPattern = null; // bytes to search for, e.g. [0x6c, 0x61]
+let highlightSet = new Set(); // every byte index covered by a match
+let patternDrag = false;      // true while dragging after a double-click
 
 let selectionEnd = null;
 let dragAnchor = null;
@@ -77,7 +79,7 @@ function renderMetaPanel(file, byteArray) {
     const hex2 = b => b.toString(16).padStart(2, "0");
     const firstBytesHex = Array.from(byteArray.subarray(0, 8), hex2).join(" ");
 
-    //file.name and file.type escaped; size uses byteArray.length so it reflects edits
+    // FIX: file.name and file.type escaped; size uses byteArray.length so it reflects edits
     container.innerHTML = `
     <div class="meta-section">
       <h3>Basic Info</h3>
@@ -125,6 +127,7 @@ function hexdumpRows(byteArray) {
 }
 
 function renderTable() {
+    updateHighlightSet();
     const rows = hexdumpRows(currentBytes);
     const tbody = document.getElementById("hexBody");
     const table = document.getElementById("hexTable");
@@ -156,7 +159,7 @@ function renderTable() {
                     td.classList.add("selected");
                 }
                 //survives re-renders
-                if (val === highlightValue) {
+                if (highlightSet.has(idx)) {
                     td.classList.add("match");
                 }
                 absoluteIndex++;
@@ -175,7 +178,7 @@ function renderTable() {
             span.dataset.value = row.hexBytes[i]; // same hex value as the matching hex cell
             span.textContent = row.ascii[i];
             if (isSelected(idx)) span.classList.add("selected");
-            if (row.hexBytes[i] === highlightValue) span.classList.add("match"); // survives re-renders
+            if (highlightSet.has(idx)) span.classList.add("match"); // survives re-renders
             asciiTd.appendChild(span);
         }
         tr.appendChild(asciiTd);
@@ -310,25 +313,34 @@ function updateMeta() {
     }
 }
 
-function onByteDoubleClick(event) {
-    // Works for both hex cells and ASCII spans
-    const el = event.target.closest("[data-index]");
-    if (!el) return;
-
-    //const idx = Number(el.dataset.index);
-    //if (selectedIndex !== idx) selectByte(idx);
-
-    highlightValue = el.dataset.value;
-
-    // Clear previous matches in both columns
-    hexBody.querySelectorAll(".match").forEach(e => e.classList.remove("match"));
-
-    // Highlight every hex cell and ASCII character with the same value
-    hexBody.querySelectorAll("[data-value]").forEach(e => {
-        if (e.dataset.value === highlightValue) {
-            e.classList.add("match");
+// Find every occurrence of highlightPattern and store the byte indices they cover
+function updateHighlightSet() {
+    highlightSet = new Set();
+    if (!highlightPattern || highlightPattern.length === 0) return;
+    const n = highlightPattern.length;
+    for (let i = 0; i + n <= currentBytes.length; i++) {
+        let ok = true;
+        for (let j = 0; j < n; j++) {
+            if (currentBytes[i + j] !== highlightPattern[j]) { ok = false; break; }
         }
+        if (ok) for (let j = 0; j < n; j++) highlightSet.add(i + j);
+    }
+}
+
+// Update the .match class on existing cells without re-rendering
+function applyHighlight() {
+    hexBody.querySelectorAll("[data-index]").forEach(el => {
+        el.classList.toggle("match", highlightSet.has(Number(el.dataset.index)));
     });
+}
+
+// Use the bytes between a and b (any order) as the pattern
+function setPatternFromRange(a, b) {
+    const start = Math.min(a, b);
+    const end = Math.max(a, b);
+    highlightPattern = Array.from(currentBytes.subarray(start, end + 1));
+    updateHighlightSet();
+    applyHighlight();
 }
 
 const fileInput = document.getElementById("fileInput");
@@ -349,7 +361,7 @@ fileInput.addEventListener("change", (event) => {
         currentFile = file; //remember the file for later metadata re-renders
         selectedIndex = null;
         selectionEnd = null;
-        highlightValue = null; //clear highlight from the previous file
+        highlightPattern = null; //clear highlight from the previous file
         renderTable();
         renderMetaPanel(file, currentBytes);
         metaEl.textContent = `${file.name} — ${currentBytes.length.toLocaleString()} bytes`;
@@ -365,7 +377,6 @@ fileInput.addEventListener("change", (event) => {
 
 //event delegation, one mousedown, mouseover and dblclick listener on tbody
 const hexBody = document.getElementById("hexBody");
-hexBody.addEventListener("dblclick", onByteDoubleClick);
 
 hexBody.addEventListener("mousedown", (e) => {
     if (e.button !== 0) return;
@@ -373,20 +384,37 @@ hexBody.addEventListener("mousedown", (e) => {
     if (!el) return;
     dragAnchor = Number(el.dataset.index);
     setSelection(dragAnchor, dragAnchor);
+
+    // The second press of a double-click starts a pattern drag
+    if (e.detail === 2) {
+        patternDrag = true;
+        setPatternFromRange(dragAnchor, dragAnchor);
+    }
 });
 
 hexBody.addEventListener("mouseover", (e) => {
     if (dragAnchor === null) return;
     const el = e.target.closest("[data-index]");
-    if (el) setSelection(dragAnchor, Number(el.dataset.index));
+    if (!el) return;
+    const idx = Number(el.dataset.index);
+    setSelection(dragAnchor, idx);
+    if (patternDrag) setPatternFromRange(dragAnchor, idx);
 });
 
 // On document so releasing the mouse outside the table still ends the drag
-document.addEventListener("mouseup", () => { dragAnchor = null; });
+document.addEventListener("mouseup", () => {
+    dragAnchor = null;
+    patternDrag = false;
+});
 
 // Escape clears the selection (replaces click-to-deselect)
 document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") setSelection(null);
+    if (e.key === "Escape") {
+        setSelection(null);
+        highlightPattern = null;
+        updateHighlightSet();
+        applyHighlight();
+    }
 });
 
 document.getElementById("deleteByteBtn").addEventListener("click", deleteSelectedByte);
