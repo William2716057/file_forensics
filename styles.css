@@ -209,3 +209,12 @@ tbody tr:nth-child(even) {
     background: #e0a030;
     color: #111;
 }
+
+.ascii-char.match {
+    background: #3a5f8a;
+    color: #fff;
+}
+
+.table-wrap {
+    user-select: none;
+}

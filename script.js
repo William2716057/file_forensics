@@ -1,4 +1,3 @@
-
 //let currentBytes = [];
 let selectedIndex = null;
 let currentBytes = new Uint8Array();
@@ -6,6 +5,9 @@ let currentBytes = new Uint8Array();
 let currentFile = null;
 //now state so it survives re-renders
 let highlightValue = null;
+
+let selectionEnd = null;
+let dragAnchor = null;
 
 
 //list of magic numbers (change to separate page)
@@ -75,7 +77,7 @@ function renderMetaPanel(file, byteArray) {
     const hex2 = b => b.toString(16).padStart(2, "0");
     const firstBytesHex = Array.from(byteArray.subarray(0, 8), hex2).join(" ");
 
-    // FIX: file.name and file.type escaped; size uses byteArray.length so it reflects edits
+    //file.name and file.type escaped; size uses byteArray.length so it reflects edits
     container.innerHTML = `
     <div class="meta-section">
       <h3>Basic Info</h3>
@@ -94,7 +96,7 @@ function renderMetaPanel(file, byteArray) {
     </div>
   `;
 }
-//get hexdumo
+//get hexdump
 function hexdumpRows(byteArray) {
     const rows = [];
 
@@ -150,7 +152,7 @@ function renderTable() {
                 const idx = absoluteIndex;
                 td.dataset.value = val;
                 td.dataset.index = idx;
-                if (idx === selectedIndex) {
+                if (isSelected(idx)) {
                     td.classList.add("selected");
                 }
                 //survives re-renders
@@ -170,8 +172,10 @@ function renderTable() {
             const idx = rowIdx * 16 + i;
             span.className = "ascii-char";
             span.dataset.index = idx;
+            span.dataset.value = row.hexBytes[i]; // same hex value as the matching hex cell
             span.textContent = row.ascii[i];
-            if (idx === selectedIndex) span.classList.add("selected");
+            if (isSelected(idx)) span.classList.add("selected");
+            if (row.hexBytes[i] === highlightValue) span.classList.add("match"); // survives re-renders
             asciiTd.appendChild(span);
         }
         tr.appendChild(asciiTd);
@@ -187,20 +191,27 @@ function renderTable() {
 }
 
 //find better way to manage larger files 
-function selectByte(idx) {
-    const tbody = document.getElementById("hexBody");
-    if (selectedIndex !== null) {
-        tbody.querySelectorAll(`[data-index="${selectedIndex}"]`)
-            .forEach(el => el.classList.remove("selected"));
-    }
-    selectedIndex = (selectedIndex === idx) ? null : idx;
-    if (selectedIndex !== null) {
-        tbody.querySelectorAll(`[data-index="${selectedIndex}"]`)
-            .forEach(el => el.classList.add("selected"));
+function isSelected(idx) {
+    return selectedIndex !== null && idx >= selectedIndex && idx <= selectionEnd;
+}
+
+// Pass (null) to clear, or (a, b) in any order to select the range between them
+function setSelection(a, b) {
+    const start = a === null ? null : Math.min(a, b);
+    const end = a === null ? null : Math.max(a, b);
+    if (start === selectedIndex && end === selectionEnd) return; // nothing changed
+
+    hexBody.querySelectorAll(".selected").forEach(el => el.classList.remove("selected"));
+    selectedIndex = start;
+    selectionEnd = end;
+    if (start !== null) {
+        for (let i = start; i <= end; i++) {
+            hexBody.querySelectorAll(`[data-index="${i}"]`)
+                .forEach(el => el.classList.add("selected"));
+        }
     }
     updateToolbarState();
 }
-
 //buttons
 function updateToolbarState() {
     const hasSelection = selectedIndex !== null && selectedIndex < currentBytes.length;
@@ -213,21 +224,21 @@ function updateToolbarState() {
 function deleteSelectedByte() {
     if (selectedIndex === null) return;
 
-    // Create a new Uint8Array that is one byte smaller.
-    const newBytes = new Uint8Array(currentBytes.length - 1);
+    // Number of bytes in the selected range.
+    const count = selectionEnd - selectedIndex + 1;
 
-    // Copy everything before the selected byte.
+    // Create a new Uint8Array smaller by the selected range.
+    const newBytes = new Uint8Array(currentBytes.length - count);
+
+    // Copy everything before the selection.
     newBytes.set(currentBytes.subarray(0, selectedIndex), 0);
 
-    // Copy everything after the selected byte.
-    newBytes.set(
-        currentBytes.subarray(selectedIndex + 1),
-        selectedIndex
-    );
+    // Copy everything after the selection.
+    newBytes.set(currentBytes.subarray(selectionEnd + 1), selectedIndex);
 
     currentBytes = newBytes;
-
     selectedIndex = null;
+    selectionEnd = null;
 
     renderTable();
     updateMeta();
@@ -265,7 +276,8 @@ function insertByteAtSelection() {
 
     currentBytes = newBytes;
 
-    // selectedIndex is unchanged, so it now points at the inserted byte.
+    // Collapse the selection to the newly inserted byte.
+    selectionEnd = selectedIndex;
     renderTable();
     updateMeta();
     renderMetaPanel(currentFile, currentBytes);
@@ -285,7 +297,8 @@ function editSelectedByte() {
         return;
     }
 
-    currentBytes[selectedIndex] = parseInt(cleaned, 16);
+    // Fill the whole selected range with the entered value.
+    currentBytes.fill(parseInt(cleaned, 16), selectedIndex, selectionEnd + 1);
     renderTable();
     renderMetaPanel(currentFile, currentBytes);
 }
@@ -297,22 +310,23 @@ function updateMeta() {
     }
 }
 
-function onByteDoubleClick(event) { //edit to allow doubleclick on multiple values
-    const td = event.target.closest(".hex-byte[data-index]");
-    if (!td) return;
+function onByteDoubleClick(event) {
+    // Works for both hex cells and ASCII spans
+    const el = event.target.closest("[data-index]");
+    if (!el) return;
 
-    const idx = Number(td.dataset.index);
-    if (selectedIndex !== idx) selectByte(idx);
+    //const idx = Number(el.dataset.index);
+    //if (selectedIndex !== idx) selectByte(idx);
 
-    highlightValue = td.dataset.value;
+    highlightValue = el.dataset.value;
 
-    // Clear previous matches
-    document.querySelectorAll(".hex-byte.match").forEach(el => el.classList.remove("match"));
+    // Clear previous matches in both columns
+    hexBody.querySelectorAll(".match").forEach(e => e.classList.remove("match"));
 
-    // Highlight every cell with the same hex value
-    document.querySelectorAll(".hex-byte").forEach(el => {
-        if (el.dataset.value === highlightValue) {
-            el.classList.add("match");
+    // Highlight every hex cell and ASCII character with the same value
+    hexBody.querySelectorAll("[data-value]").forEach(e => {
+        if (e.dataset.value === highlightValue) {
+            e.classList.add("match");
         }
     });
 }
@@ -334,6 +348,7 @@ fileInput.addEventListener("change", (event) => {
         currentFileName = file.name;
         currentFile = file; //remember the file for later metadata re-renders
         selectedIndex = null;
+        selectionEnd = null;
         highlightValue = null; //clear highlight from the previous file
         renderTable();
         renderMetaPanel(file, currentBytes);
@@ -348,17 +363,30 @@ fileInput.addEventListener("change", (event) => {
     reader.readAsArrayBuffer(file);
 });
 
-//event delegation, one click and one dblclick listener on tbody
+//event delegation, one mousedown, mouseover and dblclick listener on tbody
 const hexBody = document.getElementById("hexBody");
-hexBody.addEventListener("click", (e) => {
-    const td = e.target.closest(".hex-byte[data-index]");
-    if (td) selectByte(Number(td.dataset.index));
-});
 hexBody.addEventListener("dblclick", onByteDoubleClick);
 
-hexBody.addEventListener("click", (e) => {
-    const span = e.target.closest(".ascii-char");
-    if (span) selectByte(Number(span.dataset.index));
+hexBody.addEventListener("mousedown", (e) => {
+    if (e.button !== 0) return;
+    const el = e.target.closest("[data-index]");
+    if (!el) return;
+    dragAnchor = Number(el.dataset.index);
+    setSelection(dragAnchor, dragAnchor);
+});
+
+hexBody.addEventListener("mouseover", (e) => {
+    if (dragAnchor === null) return;
+    const el = e.target.closest("[data-index]");
+    if (el) setSelection(dragAnchor, Number(el.dataset.index));
+});
+
+// On document so releasing the mouse outside the table still ends the drag
+document.addEventListener("mouseup", () => { dragAnchor = null; });
+
+// Escape clears the selection (replaces click-to-deselect)
+document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") setSelection(null);
 });
 
 document.getElementById("deleteByteBtn").addEventListener("click", deleteSelectedByte);
