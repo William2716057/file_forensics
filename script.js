@@ -11,6 +11,8 @@ let patternDrag = false;      // true while dragging after a double-click
 let selectionEnd = null;
 let dragAnchor = null;
 
+let viewMode = "hex";
+
 
 //list of magic numbers (change to separate page)
 const FILE_SIGNATURES = [ //fix weak detections
@@ -126,6 +128,20 @@ function hexdumpRows(byteArray) {
     return rows;
 }
 
+function formatCell(hexStr) {
+    return viewMode === "bin"
+        ? parseInt(hexStr, 16).toString(2).padStart(8, "0")
+        : hexStr;
+}
+
+function setViewMode(mode) {
+    viewMode = mode;
+    document.getElementById("hexViewBtn").classList.toggle("active", mode === "hex");
+    document.getElementById("binViewBtn").classList.toggle("active", mode === "bin");
+    document.getElementById("hexTable").classList.toggle("bin", mode === "bin");
+    renderTable(); // selection and highlights are re-applied by renderTable
+}
+
 function renderTable() {
     updateHighlightSet();
     const rows = hexdumpRows(currentBytes);
@@ -150,7 +166,7 @@ function renderTable() {
             const td = document.createElement("td");
             const val = row.hexBytes[col];
             td.className = "hex-byte" + (val === "00" ? " zero" : "");
-            td.textContent = val ?? "";
+            td.textContent = val !== undefined ? formatCell(val) : "";
             if (val !== undefined) {
                 const idx = absoluteIndex;
                 td.dataset.value = val;
@@ -455,3 +471,5 @@ document.getElementById("deleteByteBtn").addEventListener("click", deleteSelecte
 document.getElementById("editByteBtn").addEventListener("click", editSelectedByte);
 document.getElementById("insertByteBtn").addEventListener("click", insertByteAtSelection);
 document.getElementById("saveBtn").addEventListener("click", saveFile);
+document.getElementById("hexViewBtn").addEventListener("click", () => setViewMode("hex"));
+document.getElementById("binViewBtn").addEventListener("click", () => setViewMode("bin"));

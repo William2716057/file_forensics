@@ -232,3 +232,13 @@ tbody tr:nth-child(even) {
     .toolbar select:disabled {
         color: #555;
     }
+
+#hexTable.bin .hex-byte {
+    width: 64px;
+}
+
+.toolbar button.active {
+    background: #3a5f8a;
+    color: #fff;
+    border-color: #3a5f8a;
+}
