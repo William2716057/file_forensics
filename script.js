@@ -397,7 +397,7 @@ function downloadBlob(data, filename, mime) {
     setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-// Same layout as the on-screen dump: offset, 16 hex bytes, ASCII
+//offset, 16 hex bytes, ASCII
 function hexDumpText() {
     return hexdumpRows(currentBytes).map(row => {
         const hex = row.hexBytes.join(" ").padEnd(16 * 3 - 1, " "); // pad the last short row so ASCII lines up
@@ -476,13 +476,13 @@ hexBody.addEventListener("mouseover", (e) => {
     if (patternDrag) setPatternFromRange(dragAnchor, idx);
 });
 
-// On document so releasing the mouse outside the table still ends the drag
+//releasing the mouse outside the table still ends the drag
 document.addEventListener("mouseup", () => {
     dragAnchor = null;
     patternDrag = false;
 });
 
-// Escape clears the selection (replaces click-to-deselect)
+// Escape clears the selection 
 document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
         setSelection(null);
