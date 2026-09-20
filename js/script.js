@@ -1,11 +1,10 @@
-/*
-
+//test
 //let currentBytes = [];
 let selectedIndex = null;
 let currentBytes = new Uint8Array();
 //metadata panel can be re-rendered after edits
 let currentFile = null;
-//now state so it survives re-renders 
+//now state so it survives re-renders
 let highlightPattern = null; // bytes to search for, e.g. [0x6c, 0x61]
 let highlightSet = new Set(); // every byte index covered by a match
 let patternDrag = false;      // true while dragging after a double-click
@@ -503,4 +502,3 @@ document.getElementById("hexViewBtn").addEventListener("click", () => setViewMod
 document.getElementById("binViewBtn").addEventListener("click", () => setViewMode("bin"));
 document.getElementById("shiftLeftBtn").addEventListener("click", () => shiftBits(-1));
 document.getElementById("shiftRightBtn").addEventListener("click", () => shiftBits(1));
-*/
