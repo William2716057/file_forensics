@@ -1,4 +1,4 @@
-//test
+
 //let currentBytes = [];
 let selectedIndex = null;
 let currentBytes = new Uint8Array();
