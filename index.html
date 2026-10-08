@@ -29,34 +29,36 @@
             </div>
 
             <div class="table-wrap">
-                <table id="hexTable" style="display: none;">
-                    <thead>
-                        <tr>
-                            <th>Offset</th>
-                            <th>00</th>
-                            <th>01</th>
-                            <th>02</th>
-                            <th>03</th>
-                            <th>04</th>
-                            <th>05</th>
-                            <th>06</th>
-                            <th>07</th>
-                            <th>08</th>
-                            <th>09</th>
-                            <th>0A</th>
-                            <th>0B</th>
-                            <th>0C</th>
-                            <th>0D</th>
-                            <th>0E</th>
-                            <th>0F</th>
-                            <th>ASCII</th>
-                        </tr>
-                    </thead>
-                    <tbody id="hexBody"></tbody>
-                </table>
-                <div id="placeholder">Choose a file to see its hex dump here.</div>
+                <div id="hexScroll" style="height:70vh; overflow:auto;">
+                    <table id="hexTable" style="display: none;">
+                        <thead>
+                            <tr>
+                                <th>Offset</th>
+                                <th>00</th>
+                                <th>01</th>
+                                <th>02</th>
+                                <th>03</th>
+                                <th>04</th>
+                                <th>05</th>
+                                <th>06</th>
+                                <th>07</th>
+                                <th>08</th>
+                                <th>09</th>
+                                <th>0A</th>
+                                <th>0B</th>
+                                <th>0C</th>
+                                <th>0D</th>
+                                <th>0E</th>
+                                <th>0F</th>
+                                <th>ASCII</th>
+                            </tr>
+                        </thead>
+                        <tbody id="hexBody"></tbody>
+                    </table>
+                    </div>
+                    <div id="placeholder">Choose a file to see its hex dump here.</div>
+                </div>
             </div>
-        </div>
 
         <div class="meta-panel">
             <h2>File Metadata</h2>
@@ -68,17 +70,18 @@
 
     <!--<script src="js/metadata/metadata.js"></script>--> <!--uncommenting bug-->
     <script src="js/script.js"></script>
+    <script src="js/metadata/metadata.js"></script>
 
 </body>
 </html>
 
 
-<!-- 
+<!--
 Browser-based binary analysis and forensic inspection tool
 format identification
 cryptographic hashing
 entropy analysis
-string extraction 
+string extraction
 hex editing
 file-structure parsing
 add only hex to recreate original files
@@ -87,4 +90,4 @@ needs unhighlight on doubleclicks
 final click unhighlights
 bitshifting left or right option (still lossy at start and end)
 fix display when scaling between binary and hex
-large-file virtualization. -->  
+large-file virtualization. -->
