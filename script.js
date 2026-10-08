@@ -1,11 +1,9 @@
-/*
-
 //let currentBytes = [];
 let selectedIndex = null;
 let currentBytes = new Uint8Array();
 //metadata panel can be re-rendered after edits
 let currentFile = null;
-//now state so it survives re-renders 
+//now state so it survives re-renders
 let highlightPattern = null; // bytes to search for, e.g. [0x6c, 0x61]
 let highlightSet = new Set(); // every byte index covered by a match
 let patternDrag = false;      // true while dragging after a double-click
@@ -15,7 +13,7 @@ let dragAnchor = null;
 
 let viewMode = "hex";
 
-
+/*
 //list of magic numbers (change to separate page)
 const FILE_SIGNATURES = [ //fix weak detections
     { type: "PNG image", offset: 0, bytes: ["89", "50", "4e", "47", "0d", "0a", "1a", "0a"] },
@@ -101,7 +99,7 @@ function renderMetaPanel(file, byteArray) {
       <div class="meta-row"><span class="meta-label">First bytes</span><span class="meta-value">${firstBytesHex}</span></div>
     </div>
   `;
-}
+}*/
 //get hexdump
 function hexdumpRows(byteArray) {
     const rows = [];
@@ -144,6 +142,8 @@ function setViewMode(mode) {
     renderTable(); // selection and highlights are re-applied by renderTable
 }
 
+//from here
+/*
 function renderTable() {
     updateHighlightSet();
     const rows = hexdumpRows(currentBytes);
@@ -209,13 +209,99 @@ function renderTable() {
     placeholder.style.display = currentBytes.length ? "none" : "block";
 
     updateToolbarState();
+}*/
+
+const ROW_H = 20;      // must match the CSS row height
+const BUFFER = 15;     // extra rows above and below the viewport
+const scroller = document.getElementById("hexScroll");
+let highlightMask = null;
+
+function spacer(h) {
+    const tr = document.createElement("tr");
+    const td = document.createElement("td");
+    td.colSpan = 18; td.style.height = h + "px"; td.style.padding = "0";
+    tr.appendChild(td);
+    return tr;
 }
+
+function buildRow(r) {
+    const len = currentBytes.length;
+    const base = r * 16;
+    const tr = document.createElement("tr");
+
+    const offsetTd = document.createElement("td");
+    offsetTd.className = "offset";
+    offsetTd.textContent = base.toString(16).padStart(8, "0");
+    tr.appendChild(offsetTd);
+
+    const asciiTd = document.createElement("td");
+    asciiTd.className = "ascii";
+
+    for (let col = 0; col < 16; col++) {
+        const idx = base + col;
+        const td = document.createElement("td");
+        if (idx < len) {
+            const b = currentBytes[idx];
+            const hex = b.toString(16).padStart(2, "0");
+            td.className = "hex-byte" + (b === 0 ? " zero" : "");
+            td.textContent = formatCell(hex);
+            td.dataset.value = hex;
+            td.dataset.index = idx;
+            if (isSelected(idx)) td.classList.add("selected");
+            if (highlightMask && highlightMask[idx]) td.classList.add("match");
+
+            const span = document.createElement("span");
+            span.className = "ascii-char";
+            span.dataset.index = idx;
+            span.dataset.value = hex;
+            span.textContent = (b >= 32 && b <= 126) ? String.fromCharCode(b) : ".";
+            if (isSelected(idx)) span.classList.add("selected");
+            if (highlightMask && highlightMask[idx]) span.classList.add("match");
+            asciiTd.appendChild(span);
+        } else {
+            td.className = "hex-byte";
+        }
+        tr.appendChild(td);
+    }
+    tr.appendChild(asciiTd);
+    return tr;
+}
+
+// rescan = false when only scrolling (bytes and pattern unchanged)
+function renderTable(rescan = true) {
+    if (rescan) updateHighlightSet();
+
+    const len = currentBytes.length;
+    const totalRows = Math.ceil(len / 16);
+    const top = scroller.scrollTop;
+    const first = Math.max(0, Math.floor(top / ROW_H) - BUFFER);
+    const last = Math.min(totalRows, Math.ceil((top + scroller.clientHeight) / ROW_H) + BUFFER);
+
+    const frag = document.createDocumentFragment();
+    frag.appendChild(spacer(first * ROW_H));
+    for (let r = first; r < last; r++) frag.appendChild(buildRow(r));
+    frag.appendChild(spacer((totalRows - last) * ROW_H));
+    hexBody.replaceChildren(frag);
+
+    document.getElementById("hexTable").style.display = len ? "table" : "none";
+    document.getElementById("placeholder").style.display = len ? "none" : "block";
+    updateToolbarState();
+}
+
+let scrollQueued = false;
+scroller.addEventListener("scroll", () => {
+    if (scrollQueued) return;
+    scrollQueued = true;
+    requestAnimationFrame(() => { scrollQueued = false; renderTable(false); });
+});
 
 //find better way to manage larger files 
 function isSelected(idx) {
     return selectedIndex !== null && idx >= selectedIndex && idx <= selectionEnd;
 }
 
+//from here
+/*
 // Pass (null) to clear, or (a, b) in any order to select the range between them
 function setSelection(a, b) {
     const start = a === null ? null : Math.min(a, b);
@@ -232,6 +318,22 @@ function setSelection(a, b) {
         }
     }
     updateToolbarState();
+} */
+
+function setSelection(a, b) {
+    const start = a === null ? null : Math.min(a, b);
+    const end = a === null ? null : Math.max(a, b);
+    if (start === selectedIndex && end === selectionEnd) return;
+    selectedIndex = start;
+    selectionEnd = end;
+    hexBody.querySelectorAll("[data-index]").forEach(el =>
+        el.classList.toggle("selected", isSelected(Number(el.dataset.index))));
+    updateToolbarState();
+}
+
+function applyHighlight() {
+    hexBody.querySelectorAll("[data-index]").forEach(el =>
+        el.classList.toggle("match", !!(highlightMask && highlightMask[Number(el.dataset.index)])));
 }
 //buttons
 function updateToolbarState() {
@@ -355,7 +457,7 @@ function shiftBits(direction) {
 function updateMeta() {
     const metaEl = document.getElementById("meta");
     if (currentBytes.length && currentFileName) {
-        metaEl.textContent = `${currentFileName} — ${currentBytes.length.toLocaleString()} bytes`;
+        metaEl.textContent = `${currentFileName} Â— ${currentBytes.length.toLocaleString()} bytes`;
     }
 }
 
@@ -428,7 +530,7 @@ fileInput.addEventListener("change", (event) => {
     const file = event.target.files[0];
     if (!file) return;
 
-    metaEl.textContent = `Reading "${file.name}" — ${file.size.toLocaleString()} bytes`;
+    metaEl.textContent = `Reading "${file.name}" Â— ${file.size.toLocaleString()} bytes`;
 
     const reader = new FileReader();
 
@@ -441,7 +543,7 @@ fileInput.addEventListener("change", (event) => {
         highlightPattern = null; //clear highlight from the previous file
         renderTable();
         renderMetaPanel(file, currentBytes);
-        metaEl.textContent = `${file.name} — ${currentBytes.length.toLocaleString()} bytes`;
+        metaEl.textContent = `${file.name} Â— ${currentBytes.length.toLocaleString()} bytes`;
     };
 
     reader.onerror = () => {
@@ -503,4 +605,3 @@ document.getElementById("hexViewBtn").addEventListener("click", () => setViewMod
 document.getElementById("binViewBtn").addEventListener("click", () => setViewMode("bin"));
 document.getElementById("shiftLeftBtn").addEventListener("click", () => shiftBits(-1));
 document.getElementById("shiftRightBtn").addEventListener("click", () => shiftBits(1));
-*/
