@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>File Analysis</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <h1>File Forensics</h1>
+    <input type="file" id="fileInput" />
+    <div id="meta"></div>
+
+    <div class="layout">
+        <div class="main-col">
+            <div class="toolbar">
+                <button id="deleteByteBtn" disabled>Delete Byte</button>
+                <button id="insertByteBtn" disabled>Insert Byte</button>
+                <button id="editByteBtn" disabled>Edit Byte</button>
+                <button id="hexViewBtn" class="active">Hex</button>
+                <button id="binViewBtn">Bin</button>
+                <button id="shiftLeftBtn" disabled>Shift Left</button>
+                <button id="shiftRightBtn" disabled>Shift Right</button>
+                <select id="saveMode" disabled>
+                    <option value="reversed">Reversed file</option>
+                    <option value="hex">Hex text (.txt)</option>
+                </select>
+                <button id="saveBtn" disabled>Save</button>
+                <button id="undoBtn" disabled>Undo</button>
+                <button id="redoBtn" disabled>Redo</button>
+            </div>
+
+            <div class="table-wrap">
+                <div id="hexScroll" style="height:70vh; overflow:auto;">
+                    <table id="hexTable" style="display: none;">
+                        <thead>
+                            <tr>
+                                <th>Offset</th>
+                                <th>00</th>
+                                <th>01</th>
+                                <th>02</th>
+                                <th>03</th>
+                                <th>04</th>
+                                <th>05</th>
+                                <th>06</th>
+                                <th>07</th>
+                                <th>08</th>
+                                <th>09</th>
+                                <th>0A</th>
+                                <th>0B</th>
+                                <th>0C</th>
+                                <th>0D</th>
+                                <th>0E</th>
+                                <th>0F</th>
+                                <th>ASCII</th>
+                            </tr>
+                        </thead>
+                        <tbody id="hexBody"></tbody>
+                    </table>
+                    </div>
+                    <div id="placeholder">Choose a file to see its hex dump here.</div>
+                </div>
+            </div>
+
+        <div class="meta-panel">
+            <h2>File Metadata</h2>
+            <div id="metaPanelContent">
+                <div class="meta-empty">No file loaded.</div>
+            </div>
+        </div>
+    </div>
+
+    <!--<script src="js/metadata/metadata.js"></script>--> <!--uncommenting bug-->
+    <script src="js/script.js"></script>
+    <script src="js/metadata/metadata.js"></script>
+
+</body>
+</html>
+
+
+<!--
+Browser-based binary analysis and forensic inspection tool
+add easier way to click and drag for multiples
+format identification
+cryptographic hashing
+entropy analysis
+string extraction
+hex editing
+file-structure parsing
+add only hex to recreate original files
+stegdetect
+needs unhighlight on doubleclicks
+final click unhighlights
+bitshifting left or right option (still lossy at start and end)
+need unselect hex when shifting single byte
+fix display when scaling between binary and hex
+large-file virtualization. -->

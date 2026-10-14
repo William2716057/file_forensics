@@ -1,0 +1,14 @@
+{
+  "name": "hex_analysis",
+  "version": "0.0.0",
+  "description": "hex_analysis",
+  "main": "server.js",
+  "author": {
+    "name": ""
+  },
+  "devDependencies": {
+    "eslint": "^8.21.0"
+  },
+  "eslintConfig": {
+  }
+}
