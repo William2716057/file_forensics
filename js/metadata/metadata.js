@@ -199,6 +199,7 @@ function renderMetaPanel(file, byteArray) {
 
     fillSha256(byteArray);
     updatePreview(byteArray);
+    updateExif(byteArray);
 }
 
 function jumpTo(offset, length) {
