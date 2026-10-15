@@ -70,26 +70,95 @@ function redo() {
 
 function deleteSelectedByte() {
     if (selectedIndex === null) return;
-    pushUndo(false);                       // <-- new (replaces the array, no copy needed)
-    // ...rest unchanged
+
+    pushUndo(false);   // snapshot before the change; the old array is kept by reference
+
+    const count = selectionEnd - selectedIndex + 1;
+    const newBytes = new Uint8Array(currentBytes.length - count);
+    newBytes.set(currentBytes.subarray(0, selectedIndex), 0);
+    newBytes.set(currentBytes.subarray(selectionEnd + 1), selectedIndex);
+
+    currentBytes = newBytes;
+    selectedIndex = null;
+    selectionEnd = null;
+
+    renderTable();
+    updateMeta();
+    renderMetaPanel(currentFile, currentBytes);
 }
 
 function insertByteAtSelection() {
-    // ...after the regex validation, before "const newBytes = ..."
-    pushUndo(false);                       // <-- new
-    // ...
+    if (selectedIndex === null) return;
+
+    const input = window.prompt("Enter hex byte value to insert (00-FF):", "00"); //?
+    if (input === null) return;
+
+    const cleaned = input.trim().replace(/^0x/i, "");
+    if (!/^[0-9a-fA-F]{1,2}$/.test(cleaned)) {
+        window.alert("Please enter a valid hex byte, e.g. \"1A\" or \"FF\".");//?
+        return;
+    }
+
+    pushUndo(false);   // after validation, so cancelled or invalid input adds no step
+
+    const newBytes = new Uint8Array(currentBytes.length + 1);
+    newBytes.set(currentBytes.subarray(0, selectedIndex), 0);
+    newBytes[selectedIndex] = parseInt(cleaned, 16);
+    newBytes.set(currentBytes.subarray(selectedIndex), selectedIndex + 1);
+
+    currentBytes = newBytes;
+    selectionEnd = selectedIndex;   // collapse selection to the inserted byte
+
+    renderTable();
+    updateMeta();
+    renderMetaPanel(currentFile, currentBytes);
 }
 
 function editSelectedByte() {
-    // ...after the regex validation, before currentBytes.fill(...)
-    pushUndo(true);                        // <-- new (in-place, so copy)
-    // ...
+    if (selectedIndex === null) return;
+
+    const current = currentBytes[selectedIndex].toString(16).padStart(2, "0");
+    const input = window.prompt("Enter new hex byte value (00-FF):", current);
+    if (input === null) return;
+
+    const cleaned = input.trim().replace(/^0x/i, "");
+    if (!/^[0-9a-fA-F]{1,2}$/.test(cleaned)) {
+        window.alert("Please enter a valid hex byte, e.g. \"1A\" or \"FF\".");
+        return;
+    }
+
+    pushUndo(true);    // fill() edits the array in place, so store a copy
+
+    currentBytes.fill(parseInt(cleaned, 16), selectedIndex, selectionEnd + 1);
+
+    renderTable();
+    renderMetaPanel(currentFile, currentBytes);
 }
 
 function shiftBits(direction) {
     if (currentBytes.length === 0) return;
-    pushUndo(true);                        // <-- new (in-place, so copy)
-    // ...
+
+    pushUndo(true);    // the loops below modify currentBytes in place
+
+    const start = selectedIndex !== null ? selectedIndex : 0;
+    const end = selectedIndex !== null ? selectionEnd : currentBytes.length - 1;
+
+    if (direction < 0) {
+        // Left: walk forward so each byte can still read its unmodified right neighbour
+        for (let i = start; i <= end; i++) {
+            const next = i < end ? currentBytes[i + 1] : 0;
+            currentBytes[i] = ((currentBytes[i] << 1) | (next >> 7)) & 0xFF;
+        }
+    } else {
+        // Right: walk backward so each byte can still read its unmodified left neighbour
+        for (let i = end; i >= start; i--) {
+            const prev = i > start ? currentBytes[i - 1] : 0;
+            currentBytes[i] = ((currentBytes[i] >> 1) | ((prev & 1) << 7)) & 0xFF;
+        }
+    }
+
+    renderTable();
+    renderMetaPanel(currentFile, currentBytes);
 }
 //get hexdump
 function hexdumpRows(byteArray) {
@@ -254,6 +323,7 @@ function updateToolbarState() {
 }
 
 //remove or leave byte location
+/*
 function deleteSelectedByte() {
     if (selectedIndex === null) return;
 
@@ -277,9 +347,9 @@ function deleteSelectedByte() {
     updateMeta();
     //refresh the metadata panel so size/type/first bytes match the edited data
     renderMetaPanel(currentFile, currentBytes);
-}
+}*/
 //repeat delete function with insert byte function
-
+/*
 function insertByteAtSelection() {
     if (selectedIndex === null) return;
 
@@ -305,7 +375,7 @@ function insertByteAtSelection() {
     newBytes.set(
         currentBytes.subarray(selectedIndex),
         selectedIndex + 1
-    );
+    )
 
     currentBytes = newBytes;
 
@@ -314,10 +384,10 @@ function insertByteAtSelection() {
     renderTable();
     updateMeta();
     renderMetaPanel(currentFile, currentBytes);
-}
+} */
 
 
-
+/*
 function editSelectedByte() {
     if (selectedIndex === null) return;
     const current = currentBytes[selectedIndex].toString(16).padStart(2, "0");
@@ -334,8 +404,8 @@ function editSelectedByte() {
     currentBytes.fill(parseInt(cleaned, 16), selectedIndex, selectionEnd + 1);
     renderTable();
     renderMetaPanel(currentFile, currentBytes);
-}
-
+} */
+/*
 function shiftBits(direction) {
     if (currentBytes.length === 0) return;
 
@@ -358,7 +428,7 @@ function shiftBits(direction) {
 
     renderTable();
     renderMetaPanel(currentFile, currentBytes); // detected type and first bytes can change
-}
+}*/
 
 function updateMeta() {
     const metaEl = document.getElementById("meta");
