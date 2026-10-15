@@ -34,6 +34,9 @@
     <Content Include="js\metadata\metadata.js">
       <SubType>Code</SubType>
     </Content>
+    <Content Include="js\preview.js">
+      <SubType>Code</SubType>
+    </Content>
     <Content Include="js\script.js">
       <SubType>Code</SubType>
     </Content>

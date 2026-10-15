@@ -118,7 +118,7 @@ function editSelectedByte() {
     if (selectedIndex === null) return;
 
     const current = currentBytes[selectedIndex].toString(16).padStart(2, "0");
-    const input = window.prompt("Enter new hex byte value (00-FF):", current);
+    const input = window.prompt("Enter new hex byte value (00-FF):", current); //change to edit at space rather than through prompt
     if (input === null) return;
 
     const cleaned = input.trim().replace(/^0x/i, "");

@@ -198,6 +198,7 @@ function renderMetaPanel(file, byteArray) {
   `;
 
     fillSha256(byteArray);
+    updatePreview(byteArray);
 }
 
 function jumpTo(offset, length) {
@@ -212,3 +213,5 @@ document.getElementById("metaPanelContent").addEventListener("click", (e) => {
     if (!row) return;
     jumpTo(Number(row.dataset.offset), Number(row.dataset.len));
 });
+
+//exif finding functions
