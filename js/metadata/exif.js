@@ -3,7 +3,6 @@ const TYPE_SIZE = { 1: 1, 2: 1, 3: 2, 4: 4, 5: 8, 6: 1, 7: 1, 8: 2, 9: 4, 10: 8,
 const SHOW_PADDING = false;   // hide Microsoft 0xea1c padding rows by default
 
 //exif data tags 
-// (legacy single-table lookups, superseded by the per-IFD tables below; no longer used by the parser)
 const EXIF_TAGS = {
     0x010F: "Make", 0x0110: "Model", 0x0112: "Orientation", 0x0131: "Software",
     0x0132: "DateTime", 0x013B: "Artist", 0x8298: "Copyright",
@@ -13,7 +12,7 @@ const EXIF_TAGS = {
     //add more
 };
 
-//metadata tags
+//geodata tags 
 const GPS_TAGS = {
     1: "GPSLatitudeRef", 2: "GPSLatitude", 3: "GPSLongitudeRef", 4: "GPSLongitude",
     5: "GPSAltitudeRef", 6: "GPSAltitude", 7: "GPSTimeStamp", 29: "GPSDateStamp"
@@ -165,12 +164,12 @@ function decodeFlash(v) {
     return parts.join(", ");
 }
 
-// ---------- Byte-level decoders ----------
+//Byte-level decoders
 function decodeUTF16LE(bytes) {
     return new TextDecoder("utf-16le").decode(new Uint8Array(bytes)).replace(/\0+$/, "");
 }
 
-// EXIF ASCII fields often hold UTF-8 anyway: try UTF-8 first, fall back to Latin-1
+// EXIF ASCII fields often hold UTF-8, try UTF-8 first, fall back to Latin-1 to avoid encoding issues
 function decodeExifText(bytes) {
     const u8 = new Uint8Array(bytes);
     try {
