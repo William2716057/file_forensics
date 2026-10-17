@@ -1,6 +1,7 @@
 //let currentBytes = [];
 let selectedIndex = null;
 let currentBytes = new Uint8Array();
+//storeOriginalHash(currentBytes);
 //metadata panel can be re-rendered after edits
 let currentFile = null;
 //now state so it survives re-renders
@@ -112,12 +113,12 @@ function deleteSelectedByte() {
 function insertByteAtSelection() {
     if (selectedIndex === null) return;
 
-    const input = window.prompt("Enter hex byte value to insert (00-FF):", "00"); //?
+    const input = window.prompt("Enter hex byte value to insert (00-FF):", "00"); //change to d
     if (input === null) return;
 
     const cleaned = input.trim().replace(/^0x/i, "");
     if (!/^[0-9a-fA-F]{1,2}$/.test(cleaned)) {
-        window.alert("Please enter a valid hex byte, e.g. \"1A\" or \"FF\".");//?
+        window.alert("Please enter a valid hex byte, e.g. \"1A\" or \"FF\".");
         return;
     }
 
@@ -427,6 +428,7 @@ fileInput.addEventListener("change", (event) => {
 
     reader.onload = (e) => {
         currentBytes = new Uint8Array(e.target.result);
+        storeOriginalHash(currentBytes); 
         currentFileName = file.name;
         currentFile = file; //remember the file for later metadata re-renders
         selectedIndex = null;

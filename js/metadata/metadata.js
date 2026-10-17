@@ -1,4 +1,4 @@
-const FILE_SIGNATURES = [ //fix weak detections
+const FILE_SIGNATURES = [ //match byte patterns
     { type: "PNG image", offset: 0, bytes: ["89", "50", "4e", "47", "0d", "0a", "1a", "0a"] },
     { type: "JPEG image", offset: 0, bytes: ["ff", "d8", "ff"] },
     { type: "GIF image (87a/89a)", offset: 0, bytes: ["47", "49", "46", "38"] },
@@ -13,7 +13,11 @@ const FILE_SIGNATURES = [ //fix weak detections
     { type: "WAV audio", offset: 8, bytes: ["57", "41", "56", "45"] },
     { type: "MP3 audio (ID3)", offset: 0, bytes: ["49", "44", "33"] },
     { type: "SQLite database", offset: 0, bytes: ["53", "51", "4c", "69", "74", "65"] },
-    { type: "UTF-8 text (BOM)", offset: 0, bytes: ["ef", "bb", "bf"] }
+    { type: "UTF-8 text (BOM)", offset: 0, bytes: ["ef", "bb", "bf"] },
+    { type: "WebP image", offset: 8, bytes: ["57", "45", "42", "50"] }, 
+    { type: "AVI video", offset: 8, bytes: ["41", "56", "49", "20"] },    
+    { type: "TIFF image", offset: 0, bytes: ["49", "49", "2a", "00"] },   // little-endian
+    { type: "TIFF image", offset: 0, bytes: ["4d", "4d", "00", "2a"] },   // big-endian
 ];
 
 // Checks currentBytes against each known signature at expected offset and returns the matched type name, or null if nothing matches.
@@ -123,13 +127,13 @@ function analyseBytes(bytes) {
 }
 
 function entropyLabel(e) { //adjust here
-    if (e > 7.5) return "very high (compressed or encrypted)";
+    if (e > 7.5) return "very high (compressed or encrypted)"; //false positives
     if (e > 6) return "high (packed or binary data)";
     if (e > 3.5) return "medium (text or code)";
     return "low (sparse or repetitive)";
 }
 
-let hashToken = 0; // discards results from older renders
+//let hashToken = 0; // discards results from older renders
 async function fillSha256(byteArray) {
     const token = ++hashToken;
     const el = document.getElementById("metaSha256");
@@ -188,7 +192,7 @@ function renderMetaPanel(file, byteArray) {
       <div class="meta-row"><span class="meta-label">Null bytes</span><span class="meta-value">${stats.nullPct.toFixed(1)}%</span></div>
       <div class="meta-row"><span class="meta-label">Unique values</span><span class="meta-value">${stats.unique} / 256</span></div>
       <div class="meta-row"><span class="meta-label">Most common</span><span class="meta-value">0x${hex2(stats.topByte)} (${stats.topCount.toLocaleString()}&times;)</span></div>
-      <div class="meta-row"><span class="meta-label">SHA-256</span><span class="meta-value" id="metaSha256" style="word-break:break-all">calculating&hellip;</span></div>
+      <div class="meta-row"><span class="meta-label">SHA-256</span><span class="meta-value${shaModified ? " modified" : ""}" id="metaSha256" style="word-break:break-all">calculating&hellip;</span></div>
     </div>
     <div class="meta-section">
       <h3>Strings (${allStrings.length.toLocaleString()} found, min length ${STRING_MIN_LEN})</h3>
@@ -215,4 +219,31 @@ document.getElementById("metaPanelContent").addEventListener("click", (e) => {
     jumpTo(Number(row.dataset.offset), Number(row.dataset.len));
 });
 
-//exif finding functions
+//hash comparison to identify changes through checksum
+
+let hashToken = 0; // discard results from older renders
+let originalHashPromise = null;   // SHA-256 of the file as loaded
+let shaModified = false;          // store last known state
+
+const sha256Hex = async bytes =>
+    Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", bytes)), hex2).join("");
+
+// Call once when a file is loaded, before any edits
+function storeOriginalHash(bytes) {
+    shaModified = false;
+    originalHashPromise = window.crypto?.subtle ? sha256Hex(bytes) : null;
+}
+
+async function fillSha256(byteArray) {
+    const token = ++hashToken;
+    const el = document.getElementById("metaSha256");
+    if (!el || !window.crypto?.subtle) { if (el) el.textContent = "unavailable (needs localhost or HTTPS)"; return; }
+
+    const [hash, original] = await Promise.all([sha256Hex(byteArray), originalHashPromise]);
+    if (token !== hashToken) return;
+
+    shaModified = original != null && hash !== original;
+    el.textContent = hash;
+    el.classList.toggle("modified", shaModified);
+    el.title = shaModified ? `Modified. Original: ${original}` : "";
+}

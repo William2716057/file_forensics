@@ -160,7 +160,8 @@ function walkBmp(bytes) {
 }
 
 //PDF
-// Best effort: reads plain-text Info dictionaries. Strings inside compressed object streams are not visible.
+//Reads plain-text Info dictionaries. 
+//Strings inside compressed object streams are not visible.
 function pdfString(raw, key) {
     let b;
     if (raw[0] === "<") {
@@ -189,7 +190,7 @@ function walkPdf(bytes) {
     const head = /^%PDF-(\d\.\d)/.exec(text);
     if (head) rows.push(hRow("PDF", "Version", head[1], 0));
 
-    // Every match is listed, so earlier revisions (incremental updates) show up too
+    // Every match is listed, earlier revisions (incremental updates) show up too
     for (const key of ["Title", "Author", "Subject", "Keywords", "Creator", "Producer", "CreationDate", "ModDate"]) {
         const re = new RegExp(`/${key}\\s*(\\((?:\\\\.|[^\\\\)])*\\)|<[0-9A-Fa-f\\s]*>)`, "g");
         for (const m of text.matchAll(re)) rows.push(hRow("PDF Info", key, pdfString(m[1], key), m.index));
@@ -359,16 +360,15 @@ function walkId3(bytes) {
 
 //registration
 // >>> The keys must match EXACTLY what detectFileType() returns for each format.
-// >>> Extra keys are harmless; remove the ones you don't use.
 Object.assign(METADATA_HANDLERS, {
     "PNG image": [walkPng],
-    "GIF image": [walkGif],
+    "GIF image (87a/89a)": [walkGif],
     "BMP image": [walkBmp],
     "PDF document": [walkPdf],
-    "ZIP archive": [walkZip],
+    "ZIP / DOCX / XLSX / PPTX / JAR": [walkZip],
     "WAV audio": [walkRiff],
     "WebP image": [walkRiff],
     "AVI video": [walkRiff],
-    "MP3 audio": [walkId3],
+    "MP3 audio (ID3)": [walkId3],
     "TIFF image": [b => walkTiffAt(b, 0)]
 });

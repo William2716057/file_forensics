@@ -22,6 +22,16 @@ input[type="file"] {
     margin-bottom: 12px;
 }
 
+#metaSha256 {
+    color: dodgerblue;
+    font-size: 11.5px; /* fits the 64 characters better in the 320px panel */
+    letter-spacing: 0.02em;
+}
+
+    #metaSha256.modified {
+        color: red; 
+    }
+
 .table-wrap {
     overflow-x: auto;
     border: 1px solid #333;
