@@ -121,12 +121,29 @@ tbody tr:nth-child(even) {
             cursor: not-allowed;
         }
 
+/*left ascii column*/
 .ascii {
     text-align: left;
     padding-left: 12px;
     border-left: 1px solid #333;
-    color: #9cdcfe;
+    color: white;
     white-space: pre;
+}
+
+.ascii-char.letter {
+    color: red; /* A-Z, a-z (red) */
+}
+
+.ascii-char.number {
+    color: yellow; /* 0-9 */
+}
+
+.ascii-char.special {
+    color: lawngreen; /* Yellow: special chars (green) */
+}
+
+.ascii-char.control {
+    color: #666; /* non-printable chars (grey) */
 }
 
 #placeholder {
@@ -275,7 +292,7 @@ tbody tr:nth-child(even) {
     min-width: 0;
 }
 
-    .exif-value.gps {
+    .exif-value.gps { /*gps*/
         color: #9cdcfe;
     }
 
@@ -320,15 +337,16 @@ tbody tr:nth-child(even) {
     overflow: hidden;
     text-overflow: ellipsis;
 }
+/*#e0a030 (orange)*/
 
 .ascii-char.selected {
     background: #e0a030;
     color: #111;
 }
-
-.ascii-char.match {
+/*ASCII colours*/
+.ascii-char.match { 
     background: #3a5f8a;
-    color: #fff;
+    color: #fff; /*selected text colour*/
 }
 
 .table-wrap {
@@ -345,6 +363,7 @@ tbody tr:nth-child(even) {
     font-family: inherit;
 }
 
+/*greyed out toolbar*/
     .toolbar select:disabled {
         color: #555;
     }

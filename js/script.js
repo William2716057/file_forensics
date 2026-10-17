@@ -19,6 +19,28 @@ const UNDO_MAX_BYTES = 128 * 1024 * 1024; // total across all snapshots
 let undoStack = [];
 let redoStack = [];
 
+
+function getAsciiClass(charCode) {
+    if (charCode < 32 || charCode > 126) {
+        return "control";
+    }
+
+    if (
+        (charCode >= 65 && charCode <= 90) ||
+        (charCode >= 97 && charCode <= 122)
+    ) {
+        return "letter";
+    }
+
+    if (charCode >= 48 && charCode <= 57) {
+        return "number";
+    }
+
+    return "special";
+}
+
+
+
 // inPlace = true when the caller is about to mutate currentBytes directly
 function snapshot(inPlace) {
     return {
@@ -245,10 +267,16 @@ function buildRow(r) {
             if (highlightSet.has(idx)) td.classList.add("match");
 
             const span = document.createElement("span");
-            span.className = "ascii-char";
+
+            //colour changes
+            span.className = `ascii-char ${getAsciiClass(b)}`;
             span.dataset.index = idx;
             span.dataset.value = hex;
-            span.textContent = (b >= 32 && b <= 126) ? String.fromCharCode(b) : ".";
+            span.textContent =
+                (b >= 32 && b <= 126)
+                    ? String.fromCharCode(b)
+                    : ".";
+
             if (isSelected(idx)) span.classList.add("selected");
             if (highlightSet.has(idx)) span.classList.add("match");
             asciiTd.appendChild(span);
