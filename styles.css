@@ -188,14 +188,15 @@ tbody tr:nth-child(even) {
         padding-bottom: 4px;
     }
 
+/* left column*/
 .meta-row {
     display: flex;
     justify-content: space-between;
     gap: 8px;
     padding: 2px 0;
-    color: #ccc;
+    color: white;
 }
-
+/* right column */
     .meta-row .meta-label {
         color: #888;
     }
@@ -206,7 +207,7 @@ tbody tr:nth-child(even) {
     }
 
 .meta-value.detected {
-    color: #9cdcfe;
+    color: yellow;
 }
 
 .meta-value.unknown {

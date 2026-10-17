@@ -123,7 +123,7 @@ function editSelectedByte() {
 
     const cleaned = input.trim().replace(/^0x/i, "");
     if (!/^[0-9a-fA-F]{1,2}$/.test(cleaned)) {
-        window.alert("Please enter a valid hex byte, e.g. \"1A\" or \"FF\".");
+        window.alert("Hex byte invalid");
         return;
     }
 
@@ -135,7 +135,8 @@ function editSelectedByte() {
     renderMetaPanel(currentFile, currentBytes);
 }
 
-function shiftBits(direction) {
+//bit shift operations
+function bitShift(direction) {
     if (currentBytes.length === 0) return;
 
     pushUndo(true);    // the loops below modify currentBytes in place
@@ -472,8 +473,8 @@ document.getElementById("insertByteBtn").addEventListener("click", insertByteAtS
 document.getElementById("saveBtn").addEventListener("click", saveFile);
 document.getElementById("hexViewBtn").addEventListener("click", () => setViewMode("hex"));
 document.getElementById("binViewBtn").addEventListener("click", () => setViewMode("bin"));
-document.getElementById("shiftLeftBtn").addEventListener("click", () => shiftBits(-1));
-document.getElementById("shiftRightBtn").addEventListener("click", () => shiftBits(1));
+document.getElementById("shiftLeftBtn").addEventListener("click", () => bitShift(-1));
+document.getElementById("shiftRightBtn").addEventListener("click", () => bitShift(1));
 document.getElementById("undoBtn").addEventListener("click", undo);
 document.getElementById("redoBtn").addEventListener("click", redo);
 
