@@ -255,7 +255,7 @@ tbody tr:nth-child(even) {
     justify-content: space-between;
     gap: 8px;
     padding: 2px 4px;
-    color: #ccc;
+    color: white;
 }
 
     .exif-row:hover {
