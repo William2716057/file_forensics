@@ -59,9 +59,9 @@ th, td {
     text-align: center;
     white-space: nowrap;
 }
-
+/*top header*/
 thead th {
-    color: #888;
+    color: white;
     border-bottom: 1px solid #333;
     position: sticky;
     top: 0;
