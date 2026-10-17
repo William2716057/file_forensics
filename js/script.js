@@ -276,7 +276,7 @@ function buildRow(r) {
                 (b >= 32 && b <= 126)
                     ? String.fromCharCode(b)
                     : ".";
-
+            //access selected highlights
             if (isSelected(idx)) span.classList.add("selected");
             if (highlightSet.has(idx)) span.classList.add("match");
             asciiTd.appendChild(span);
@@ -317,7 +317,7 @@ scroller.addEventListener("scroll", () => {
     requestAnimationFrame(() => { scrollQueued = false; renderTable(false); });
 });
 
-//find better way to manage larger files 
+//access selected bytes
 function isSelected(idx) {
     return selectedIndex !== null && idx >= selectedIndex && idx <= selectionEnd;
 }
@@ -332,11 +332,6 @@ function setSelection(a, b) {
         el.classList.toggle("selected", isSelected(Number(el.dataset.index))));
     updateToolbarState();
 }
-/*
-function applyHighlight() { //duplicate function
-    hexBody.querySelectorAll("[data-index]").forEach(el =>
-        el.classList.toggle("match", !!(highlightMask && highlightMask[Number(el.dataset.index)])));
-}*/
 //buttons
 function updateToolbarState() {
     const hasSelection = selectedIndex !== null && selectedIndex < currentBytes.length;

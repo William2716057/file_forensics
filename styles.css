@@ -135,11 +135,11 @@ tbody tr:nth-child(even) {
 }
 
 .ascii-char.number {
-    color: yellow; /* 0-9 */
+    color: yellow; /* 0-9 (yellow) */
 }
 
 .ascii-char.special {
-    color: lawngreen; /* Yellow: special chars (green) */
+    color: lawngreen; /*special chars (green) */
 }
 
 .ascii-char.control {

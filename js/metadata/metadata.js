@@ -122,7 +122,7 @@ function analyseBytes(bytes) {
     };
 }
 
-function entropyLabel(e) {
+function entropyLabel(e) { //adjust here
     if (e > 7.5) return "very high (compressed or encrypted)";
     if (e > 6) return "high (packed or binary data)";
     if (e > 3.5) return "medium (text or code)";
