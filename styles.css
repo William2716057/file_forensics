@@ -41,7 +41,7 @@ input[type="file"] {
 
 table {
     border-collapse: collapse;
-    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    /*font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;*/
     font-size: 13px;
     background: #111; /*lines*/
     width: max-content;
@@ -182,11 +182,11 @@ tbody tr:nth-child(even) {
     border: 1px solid #333;
     border-radius: 6px;
     padding: 14px 16px;
-    font-family: "SFMono-Regular", Consolas, Menlo, monospace; 
+    /*font-family: "SFMono-Regular", Consolas, Menlo, monospace; */
     font-size: 12.5px;
 }
-
-    .meta-panel h2 {
+/*meta headers*/
+    .meta-panel h2 { 
         font-size: 13px;
         color: #fff;
         margin: 0 0 10px 0;
