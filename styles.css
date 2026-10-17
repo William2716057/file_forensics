@@ -1,12 +1,13 @@
+
 body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    /*font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;*/
     background: #1e1e1e;
-    color: #ddd;
+    color: #ddd; /*string column text*/
     padding: 24px;
 }
 
 h1 {
-    font-size: 18px;
+    font-size: 18px; /*main heading*/
     color: #fff;
     margin-bottom: 12px;
 }
@@ -42,7 +43,7 @@ table {
     border-collapse: collapse;
     font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
     font-size: 13px;
-    background: #111;
+    background: #111; /*lines*/
     width: max-content;
 }
 
@@ -69,13 +70,13 @@ thead th {
 }
 
 tbody tr:nth-child(even) {
-    background: #161616;
+    background: #161616; /*lines*/
 }
 
 .offset {
     width: 1%;
     white-space: nowrap;
-    color: #666;
+    color: white; /*addresses*/
     text-align: left;
     border-right: 1px solid #333;
     padding-right: 10px;
@@ -101,7 +102,7 @@ tbody tr:nth-child(even) {
     }
 
     .hex-byte.selected {
-        outline: 2px solid #e0a030;
+        outline: 2px solid white;
         outline-offset: -2px;
     }
 
@@ -189,7 +190,7 @@ tbody tr:nth-child(even) {
         font-size: 13px;
         color: #fff;
         margin: 0 0 10px 0;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        /*font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;*/
     }
 
     .meta-panel .meta-empty {
