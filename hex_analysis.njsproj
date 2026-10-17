@@ -34,6 +34,9 @@
     <Content Include="js\metadata\exif.js">
       <SubType>Code</SubType>
     </Content>
+    <Content Include="js\metadata\handlers.js">
+      <SubType>Code</SubType>
+    </Content>
     <Content Include="js\metadata\metadata.js">
       <SubType>Code</SubType>
     </Content>

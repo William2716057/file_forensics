@@ -290,6 +290,9 @@ function collectEntries(view, entries, le, group, ifd, rows) {
 }
 
 //walkthroughs 
+
+//original walkjpeg
+/*
 function walkJpeg(bytes) {
     const base = findJpegExif(bytes);
     if (base < 0) return [];
@@ -321,8 +324,49 @@ function walkJpeg(bytes) {
         collectEntries(view, ifd1.entries, le, "Thumbnail", "IFD1", rows);
     }
     return rows;
+} */
+
+//new function 
+
+//from here
+function walkJpeg(bytes) {
+    const base = findJpegExif(bytes);
+    if (base < 0) return [];
+    return walkTiffAt(bytes, base);
 }
 
+// Parses a TIFF structure starting at `base` (JPEG APP1, PNG eXIf, WebP EXIF chunk, or a .tif file at 0)
+function walkTiffAt(bytes, base) {
+    const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    const order = view.getUint16(base);
+    if (order !== 0x4949 && order !== 0x4D4D)
+        return [{ group: "Warnings", tag: "EXIF", value: "Bad TIFF byte order marker", offset: base, warn: true }];
+    const le = order === 0x4949;
+
+    const rows = [];
+    const seen = new Set();
+    const ifd0 = readIfd(view, base, view.getUint32(base + 4, le), le, seen);
+    collectEntries(view, ifd0.entries, le, "Image", "IFD0", rows);
+
+    const follow = (entries, tag, group, ifd) => {
+        const p = entries.find(e => e.tag === tag);
+        if (!p) return null;
+        const sub = readIfd(view, base, view.getUint32(p.valPos, le), le, seen);
+        collectEntries(view, sub.entries, le, group, ifd, rows);
+        return sub;
+    };
+    const exif = follow(ifd0.entries, 0x8769, "Exif", "Exif");
+    if (exif) follow(exif.entries, 0xA005, "Interop", "Interop");
+    follow(ifd0.entries, 0x8825, "GPS", "GPS");
+
+    if (ifd0.next) {                                       // IFD1 = embedded thumbnail
+        const ifd1 = readIfd(view, base, ifd0.next, le, seen);
+        collectEntries(view, ifd1.entries, le, "Thumbnail", "IFD1", rows);
+    }
+    return rows;
+}
+
+//to here
 
 
 function extractMetadata(bytes) {
