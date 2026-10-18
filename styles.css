@@ -235,7 +235,7 @@ tbody tr:nth-child(even) {
     }
 
 .meta-value.detected {
-    color: yellow;
+    color: white; /*change*/
 }
 
 .meta-value.unknown {
@@ -308,7 +308,7 @@ tbody tr:nth-child(even) {
     }
 
     .exif-value.warn {
-        color: #e0a030;
+        color: #e0a030; /*pdf exif*/
     }
 
     .exif-value.unknown {
@@ -351,7 +351,7 @@ tbody tr:nth-child(even) {
 /*#e0a030 (orange)*/
 
 .ascii-char.selected {
-    background: #e0a030;
+    background: white; /*change highlight in ascii column*/
     color: #111;
 }
 /*ASCII colours*/
