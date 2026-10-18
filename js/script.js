@@ -1,18 +1,26 @@
+
 //let currentBytes = [];
 let selectedIndex = null;
 let currentBytes = new Uint8Array();
 //storeOriginalHash(currentBytes);
 //metadata panel can be re-rendered after edits
 let currentFile = null;
-//now state so it survives re-renders
+//store state
 let highlightPattern = null; // bytes to search for, e.g. [0x6c, 0x61]
-let highlightSet = new Set(); // every byte index covered by a match
+let highlightSet = new Set(); // each byte index covered by a match
 let patternDrag = false;      // true while dragging after a double-click
 
 let selectionEnd = null;
 let dragAnchor = null;
 
 let viewMode = "hex";
+
+//for hex editing
+let editing = false;          // true only between pressing Edit/Insert and finishing the byte
+let insertMode = false;       // false = overwrite, true = insert (only meaningful while editing)
+let pendingNibble = null;     // first hex digit typed, waiting for the second
+let metaTimer = null;
+
 
 //fix undo functions
 const UNDO_MAX_STEPS = 200;
@@ -65,7 +73,8 @@ function pushUndo(inPlace) {
 }
 
 function restoreSnapshot(s) {
-    currentBytes = s.bytes;
+    editing = false; pendingNibble = null; updateEditButtons();
+    currentBytes = s.bytes;//added
     const max = currentBytes.length - 1;
     if (s.start !== null && s.start <= max) {
         selectedIndex = s.start;
@@ -94,7 +103,7 @@ function redo() {
 function deleteSelectedByte() {
     if (selectedIndex === null) return;
 
-    pushUndo(false);   // snapshot before the change; the old array is kept by reference
+    pushUndo(false);   //take snapshot before change
 
     const count = selectionEnd - selectedIndex + 1;
     const newBytes = new Uint8Array(currentBytes.length - count);
@@ -122,7 +131,7 @@ function insertByteAtSelection() {
         return;
     }
 
-    pushUndo(false);   // after validation, so cancelled or invalid input adds no step
+    pushUndo(false);   // after validation, cancelled or invalid input adds no step
 
     const newBytes = new Uint8Array(currentBytes.length + 1);
     newBytes.set(currentBytes.subarray(0, selectedIndex), 0);
@@ -137,26 +146,139 @@ function insertByteAtSelection() {
     renderMetaPanel(currentFile, currentBytes);
 }
 
+function updateEditButtons() {
+    document.getElementById("editByteBtn").classList.toggle("active", editing && !insertMode);
+    document.getElementById("insertByteBtn").classList.toggle("active", editing && insertMode);
+}
+
+function startEdit(insert) {
+    if (selectedIndex === null) return;
+    editing = true;
+    insertMode = insert;
+    pendingNibble = null;
+    updateEditButtons();
+    renderTable(false); // display __ placeholder while editing 
+}
+
+//cancel if half typed
+// returns true if an edit was actually in progress
+function endEdit() {
+    const was = editing;
+    editing = false;
+    pendingNibble = null;
+    updateEditButtons();
+    if (was) renderTable(false);
+    return was;
+}
+
+//rescan in metapanel
+function refreshMetaSoon() {
+    clearTimeout(metaTimer);
+    metaTimer = setTimeout(() => {
+        updateMeta();
+        renderMetaPanel(currentFile, currentBytes);
+    }, 300);
+}
+
+
+function scrollToIndex(idx) {
+    const top = Math.floor(idx / 16) * ROW_H;
+    const margin = ROW_H * 2;
+    if (top < scroller.scrollTop + margin) scroller.scrollTop = Math.max(0, top - margin);
+    else if (top + ROW_H > scroller.scrollTop + scroller.clientHeight - margin)
+        scroller.scrollTop = top + ROW_H - scroller.clientHeight + margin;
+}
+
+function moveCursor(i) {
+    i = Math.max(0, Math.min(currentBytes.length - 1, i));
+    selectedIndex = selectionEnd = i;
+    scrollToIndex(i);
+    renderTable(false);
+}
+
+function typeHexDigit(d) {
+    if (pendingNibble === null) {          // first digit: show it and wait
+        pendingNibble = d;
+        renderTable(false);
+        return;
+    }
+
+    const value = parseInt(pendingNibble + d, 16);
+
+    if (insertMode) {
+        pushUndo(false);
+        const nb = new Uint8Array(currentBytes.length + 1);
+        nb.set(currentBytes.subarray(0, selectedIndex), 0);
+        nb[selectedIndex] = value;
+        nb.set(currentBytes.subarray(selectedIndex), selectedIndex + 1);
+        currentBytes = nb;
+    } else {
+        pushUndo(true);
+        currentBytes[selectedIndex] = value;
+    }
+
+    editing = false;                       // revert when finished
+    pendingNibble = null;
+    selectionEnd = selectedIndex;          
+    updateEditButtons();
+    renderTable();
+    refreshMetaSoon();
+}
+//check
+document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+        if (endEdit()) return;             // first Escape cancels the edit
+        setSelection(null);
+        highlightPattern = null;
+        updateHighlightSet();
+        applyHighlight();
+        return;
+    }
+
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+    if (selectedIndex === null || currentBytes.length === 0) return;
+
+    if (editing && /^[0-9a-f]$/i.test(e.key)) {    // digits only count while editing
+        e.preventDefault();
+        typeHexDigit(e.key.toLowerCase());
+        return;
+    }
+
+    const step = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -16, ArrowDown: 16 }[e.key];
+    if (step) {
+        e.preventDefault();
+        endEdit();                         // moving away cancels
+        moveCursor(selectedIndex + step);
+    } else if (e.key === "Delete") {       // optional: Delete key removes the selection
+        e.preventDefault();
+        endEdit();
+        deleteSelectedByte();
+    }
+});
+
+
+/*
 function editSelectedByte() {
     if (selectedIndex === null) return;
-
+ 
     const current = currentBytes[selectedIndex].toString(16).padStart(2, "0");
     const input = window.prompt("Enter new hex byte value (00-FF):", current); //change to edit at space rather than through prompt
     if (input === null) return;
-
+ 
     const cleaned = input.trim().replace(/^0x/i, "");
     if (!/^[0-9a-fA-F]{1,2}$/.test(cleaned)) {
         window.alert("Hex byte invalid");
         return;
     }
-
+ 
     pushUndo(true);    // fill() edits the array in place, so store a copy
-
+ 
     currentBytes.fill(parseInt(cleaned, 16), selectedIndex, selectionEnd + 1);
-
+ 
     renderTable();
     renderMetaPanel(currentFile, currentBytes);
-}
+}*/
 
 //bit shift operations
 function bitShift(direction) {
@@ -239,6 +361,7 @@ function spacer(h) {
     return tr;
 }
 
+//here
 function buildRow(r) {
     const len = currentBytes.length;
     const base = r * 16;
@@ -259,7 +382,13 @@ function buildRow(r) {
             const b = currentBytes[idx];
             const hex = b.toString(16).padStart(2, "0");
             td.className = "hex-byte" + (b === 0 ? " zero" : "");
+            //add here
             td.textContent = formatCell(hex);
+            if (editing && idx === selectedIndex) {
+                td.textContent = pendingNibble !== null ? pendingNibble + "_" : "__";
+                td.classList.add("editing");
+            }
+            //to here
             td.dataset.value = hex;
             td.dataset.index = idx;
             if (isSelected(idx)) td.classList.add("selected");
@@ -290,7 +419,10 @@ function buildRow(r) {
     return tr;
 }
 
-// rescan = false when only scrolling (bytes and pattern unchanged)
+
+
+//here
+
 function renderTable(rescan = true) {
     if (rescan) updateHighlightSet();
 
@@ -311,6 +443,29 @@ function renderTable(rescan = true) {
     updateToolbarState();
 }
 
+//reset typing state after editing byte
+function setSelection(a, b) {
+    const wasEditing = editing;
+    editing = false;                       // clicking elsewhere cancels an edit
+    pendingNibble = null;
+    if (wasEditing) updateEditButtons();
+
+    const start = a === null ? null : Math.min(a, b);
+    const end = a === null ? null : Math.max(a, b);
+    if (start === selectedIndex && end === selectionEnd) {
+        if (wasEditing) renderTable(false);
+        return;
+    }
+    selectedIndex = start;
+    selectionEnd = end;
+    hexBody.querySelectorAll("[data-index]").forEach(el =>
+        el.classList.toggle("selected", isSelected(Number(el.dataset.index))));
+    if (wasEditing) renderTable(false);
+    updateToolbarState();
+}
+
+
+
 let scrollQueued = false;
 scroller.addEventListener("scroll", () => {
     if (scrollQueued) return;
@@ -323,16 +478,6 @@ function isSelected(idx) {
     return selectedIndex !== null && idx >= selectedIndex && idx <= selectionEnd;
 }
 
-function setSelection(a, b) {
-    const start = a === null ? null : Math.min(a, b);
-    const end = a === null ? null : Math.max(a, b);
-    if (start === selectedIndex && end === selectionEnd) return;
-    selectedIndex = start;
-    selectionEnd = end;
-    hexBody.querySelectorAll("[data-index]").forEach(el =>
-        el.classList.toggle("selected", isSelected(Number(el.dataset.index))));
-    updateToolbarState();
-}
 //buttons
 function updateToolbarState() {
     const hasSelection = selectedIndex !== null && selectedIndex < currentBytes.length;
@@ -406,7 +551,7 @@ function saveFile() {
     const mode = document.getElementById("saveMode").value;
 
     if (mode === "reversed") {
-        // slice() copies first so the bytes on screen aren't reversed too
+        // slice() copies first so the bytes on screen aren't reversed
         downloadBlob(currentBytes.slice().reverse(), "reversed_" + currentFileName, "application/octet-stream");
     } else {
         downloadBlob(hexDumpText(), currentFileName + ".hex.txt", "text/plain");
@@ -428,13 +573,14 @@ fileInput.addEventListener("change", (event) => {
 
     reader.onload = (e) => {
         currentBytes = new Uint8Array(e.target.result);
-        storeOriginalHash(currentBytes); 
+        storeOriginalHash(currentBytes);
         currentFileName = file.name;
         currentFile = file; //remember the file for later metadata re-renders
         selectedIndex = null;
         selectionEnd = null;
         undoStack = [];
         redoStack = [];
+        editing = false; pendingNibble = null; updateEditButtons();
         highlightPattern = null; //clear highlight from the previous file
         renderTable();
         renderMetaPanel(file, currentBytes);
@@ -480,7 +626,7 @@ document.addEventListener("mouseup", () => {
     dragAnchor = null;
     patternDrag = false;
 });
-
+/*
 // Escape clears the selection 
 document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
@@ -489,12 +635,14 @@ document.addEventListener("keydown", (e) => {
         updateHighlightSet();
         applyHighlight();
     }
-});
+});*/
 
 //listeners 
 document.getElementById("deleteByteBtn").addEventListener("click", deleteSelectedByte);
-document.getElementById("editByteBtn").addEventListener("click", editSelectedByte);
-document.getElementById("insertByteBtn").addEventListener("click", insertByteAtSelection);
+//document.getElementById("editByteBtn").addEventListener("click", editSelectedByte);
+//document.getElementById("insertByteBtn").addEventListener("click", insertByteAtSelection);
+//document.getElementById("editByteBtn").addEventListener("click", () => setEditMode(false));
+document.getElementById("insertByteBtn").addEventListener("click", () => startEdit(true));
 document.getElementById("saveBtn").addEventListener("click", saveFile);
 document.getElementById("hexViewBtn").addEventListener("click", () => setViewMode("hex"));
 document.getElementById("binViewBtn").addEventListener("click", () => setViewMode("bin"));
@@ -502,6 +650,7 @@ document.getElementById("shiftLeftBtn").addEventListener("click", () => bitShift
 document.getElementById("shiftRightBtn").addEventListener("click", () => bitShift(1));
 document.getElementById("undoBtn").addEventListener("click", undo);
 document.getElementById("redoBtn").addEventListener("click", redo);
+document.getElementById("editByteBtn").addEventListener("click", () => startEdit(false));
 
 document.addEventListener("keydown", (e) => {
     if (!(e.ctrlKey || e.metaKey)) return;
