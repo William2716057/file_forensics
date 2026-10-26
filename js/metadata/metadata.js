@@ -1,4 +1,4 @@
-const FILE_SIGNATURES = [ //match byte patterns
+/*const FILE_SIGNATURES = [ //match byte patterns
     { type: "PNG image", offset: 0, bytes: ["89", "50", "4e", "47", "0d", "0a", "1a", "0a"] },
     { type: "JPEG image", offset: 0, bytes: ["ff", "d8", "ff"] },
     { type: "GIF image (87a/89a)", offset: 0, bytes: ["47", "49", "46", "38"] },
@@ -18,7 +18,7 @@ const FILE_SIGNATURES = [ //match byte patterns
     { type: "AVI video", offset: 8, bytes: ["41", "56", "49", "20"] },    
     { type: "TIFF image", offset: 0, bytes: ["49", "49", "2a", "00"] },   // little-endian
     { type: "TIFF image", offset: 0, bytes: ["4d", "4d", "00", "2a"] },   // big-endian
-];
+];*/
 
 // Checks currentBytes against each known signature at expected offset and returns the matched type name, or null if nothing matches.
 function detectFileType(byteArray) {

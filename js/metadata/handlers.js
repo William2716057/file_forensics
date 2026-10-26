@@ -91,7 +91,7 @@ function walkGif(bytes) {
     const rows = [], v = hView(bytes);
     if (bytes.length < 13) return rows;
     rows.push(hRow("GIF", "Version", hDec(bytes.subarray(0, 6), "latin1"), 0));
-    rows.push(hRow("GIF", "Dimensions", `${v.getUint16(6, true)} x ${v.getUint16(8, true)}`, 6));
+    rows.push(hRow("GIF", "Dimensions", `${v.getUint16(6, true)} xg ${v.getUint16(8, true)}`, 6));
 
     let p = 13, frames = 0, ended = false;
     if (bytes[10] & 0x80) p += 3 * (1 << ((bytes[10] & 7) + 1));     // global colour table

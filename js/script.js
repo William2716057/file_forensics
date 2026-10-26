@@ -27,7 +27,6 @@ const UNDO_MAX_BYTES = 128 * 1024 * 1024; // total across all snapshots
 let undoStack = [];
 let redoStack = [];
 
-
 function getAsciiClass(charCode) {
     if (charCode < 32 || charCode > 126) {
         return "control";
