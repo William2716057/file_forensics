@@ -1,3 +1,5 @@
+
+
 // Checks currentBytes against each known signature at expected offset and returns the matched type name, or null if nothing matches.
 function detectFileType(byteArray) {
     for (const sig of FILE_SIGNATURES) {

@@ -240,7 +240,7 @@ function walkZip(bytes) {
             `${hPad(time >> 11)}:${hPad((time >> 5) & 63)}:${hPad((time & 31) * 2)}`;
         rows.push(hRow("ZIP entries", name,
             `${usize} bytes (${csize} compressed, ${ZIP_METHODS[method] ?? "method " + method})` +
-            `${flags & 1 ? ", encrypted" : ""} · ${when}`, v.getUint32(p + 42, true)));
+            `${flags & 1 ? ", encrypted" : ""} : ${when}`, v.getUint32(p + 42, true)));
         p += 46 + nl + xl + cl;
     }
     if (total > 500) rows.push(hRow("ZIP", "Note", `Showing first 500 of ${total} entries`, cdOff));
