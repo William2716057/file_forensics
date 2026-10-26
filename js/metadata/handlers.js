@@ -27,7 +27,7 @@ function walkPng(bytes) {
         }
         switch (type) {
             case "IHDR": //png header
-                rows.push(hRow("PNG", "Dimensions", `${v.getUint32(d)} × ${v.getUint32(d + 4)}`, d));
+                rows.push(hRow("PNG", "Dimensions", `${v.getUint32(d)} x ${v.getUint32(d + 4)}`, d));
                 rows.push(hRow("PNG", "BitDepth", bytes[d + 8], d + 8));
                 rows.push(hRow("PNG", "ColorType", `${PNG_COLOR_TYPES[bytes[d + 9]] ?? "Unknown"} (${bytes[d + 9]})`, d + 9));
                 rows.push(hRow("PNG", "Interlace", bytes[d + 12] ? "Adam7" : "None", d + 12));
@@ -60,8 +60,8 @@ function walkPng(bytes) {
             case "pHYs": {
                 const x = v.getUint32(d), y = v.getUint32(d + 4);
                 rows.push(hRow("PNG", "PixelsPerUnit", bytes[d + 8] === 1
-                    ? `${x} × ${y} px/m (${(x * 0.0254).toFixed(1)} × ${(y * 0.0254).toFixed(1)} dpi)`
-                    : `${x} × ${y} (unit unknown)`, d));
+                    ? `${x} x ${y} px/m (${(x * 0.0254).toFixed(1)} x ${(y * 0.0254).toFixed(1)} dpi)`
+                    : `${x} x ${y} (unit unknown)`, d));
                 break;
             }
             case "gAMA":
@@ -91,7 +91,7 @@ function walkGif(bytes) {
     const rows = [], v = hView(bytes);
     if (bytes.length < 13) return rows;
     rows.push(hRow("GIF", "Version", hDec(bytes.subarray(0, 6), "latin1"), 0));
-    rows.push(hRow("GIF", "Dimensions", `${v.getUint16(6, true)} × ${v.getUint16(8, true)}`, 6));
+    rows.push(hRow("GIF", "Dimensions", `${v.getUint16(6, true)} x ${v.getUint16(8, true)}`, 6));
 
     let p = 13, frames = 0, ended = false;
     if (bytes[10] & 0x80) p += 3 * (1 << ((bytes[10] & 7) + 1));     // global colour table
@@ -145,15 +145,15 @@ function walkBmp(bytes) {
     rows.push(hRow("BMP", "DIBHeaderSize", dib, 14));
     if (dib >= 40 && bytes.length >= 54) {
         const h = v.getInt32(22, true);
-        rows.push(hRow("BMP", "Dimensions", `${v.getInt32(18, true)} × ${Math.abs(h)}${h < 0 ? " (top-down)" : ""}`, 18));
+        rows.push(hRow("BMP", "Dimensions", `${v.getInt32(18, true)} x ${Math.abs(h)}${h < 0 ? " (top-down)" : ""}`, 18));
         rows.push(hRow("BMP", "BitsPerPixel", v.getUint16(28, true), 28));
         const c = v.getUint32(30, true);
         rows.push(hRow("BMP", "Compression", `${BMP_COMPRESSION[c] ?? "Unknown"} (${c})`, 30));
         rows.push(hRow("BMP", "ImageSize", v.getUint32(34, true), 34));
-        rows.push(hRow("BMP", "PixelsPerMetre", `${v.getInt32(38, true)} × ${v.getInt32(42, true)}`, 38));
+        rows.push(hRow("BMP", "PixelsPerMetre", `${v.getInt32(38, true)} x ${v.getInt32(42, true)}`, 38));
         rows.push(hRow("BMP", "ColorsUsed", v.getUint32(46, true), 46));
     } else if (dib === 12) {
-        rows.push(hRow("BMP", "Dimensions", `${v.getUint16(18, true)} × ${v.getUint16(20, true)}`, 18));
+        rows.push(hRow("BMP", "Dimensions", `${v.getUint16(18, true)} x ${v.getUint16(20, true)}`, 18));
         rows.push(hRow("BMP", "BitsPerPixel", v.getUint16(24, true), 24));
     }
     return rows;
@@ -285,7 +285,7 @@ function walkRiff(bytes) {
             } else if (cid === "VP8X" && len >= 10) {                 // WebP extended header
                 const w = 1 + (bytes[d + 4] | (bytes[d + 5] << 8) | (bytes[d + 6] << 16));
                 const h = 1 + (bytes[d + 7] | (bytes[d + 8] << 8) | (bytes[d + 9] << 16));
-                rows.push(hRow("WebP", "Canvas", `${w} × ${h}`, d + 4));
+                rows.push(hRow("WebP", "Canvas", `${w} x ${h}`, d + 4));
             } else if (cid === "EXIF") {
                 const skip = hDec(bytes.subarray(d, d + 6), "latin1") === "Exif\0\0" ? 6 : 0;
                 rows.push(...walkTiffAt(bytes, d + skip));

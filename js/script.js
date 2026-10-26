@@ -2,7 +2,6 @@
 //let currentBytes = [];
 let selectedIndex = null;
 let currentBytes = new Uint8Array();
-//storeOriginalHash(currentBytes);
 //metadata panel can be re-rendered after edits
 let currentFile = null;
 //store state
@@ -256,29 +255,6 @@ document.addEventListener("keydown", (e) => {
         deleteSelectedByte();
     }
 });
-
-
-/*
-function editSelectedByte() {
-    if (selectedIndex === null) return;
- 
-    const current = currentBytes[selectedIndex].toString(16).padStart(2, "0");
-    const input = window.prompt("Enter new hex byte value (00-FF):", current); //change to edit at space rather than through prompt
-    if (input === null) return;
- 
-    const cleaned = input.trim().replace(/^0x/i, "");
-    if (!/^[0-9a-fA-F]{1,2}$/.test(cleaned)) {
-        window.alert("Hex byte invalid");
-        return;
-    }
- 
-    pushUndo(true);    // fill() edits the array in place, so store a copy
- 
-    currentBytes.fill(parseInt(cleaned, 16), selectedIndex, selectionEnd + 1);
- 
-    renderTable();
-    renderMetaPanel(currentFile, currentBytes);
-}*/
 
 //bit shift operations
 function bitShift(direction) {
@@ -626,16 +602,7 @@ document.addEventListener("mouseup", () => {
     dragAnchor = null;
     patternDrag = false;
 });
-/*
-// Escape clears the selection 
-document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") {
-        setSelection(null);
-        highlightPattern = null;
-        updateHighlightSet();
-        applyHighlight();
-    }
-});*/
+
 
 //listeners 
 document.getElementById("deleteByteBtn").addEventListener("click", deleteSelectedByte);
