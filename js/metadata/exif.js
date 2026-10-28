@@ -98,9 +98,9 @@ const IFD_TABLES = {
 // Enum value labels
 const ENUMS = {
     Orientation: {
-        1: "Normal", 2: "Mirrored horizontal", 3: "Rotated 180°", 4: "Mirrored vertical",
-        5: "Mirrored horizontal, rotated 270° CW", 6: "Rotated 90° CW",
-        7: "Mirrored horizontal, rotated 90° CW", 8: "Rotated 270° CW"
+        1: "Normal", 2: "Mirrored horizontal", 3: "Rotated 180 deg", 4: "Mirrored vertical",
+        5: "Mirrored horizontal, rotated 270 deg CW", 6: "Rotated 90 deg CW",
+        7: "Mirrored horizontal, rotated 90 deg CW", 8: "Rotated 270 deg CW"
     },
     ResolutionUnit: { 1: "None", 2: "Inches", 3: "Centimetres" },
     FocalPlaneResolutionUnit: { 1: "None", 2: "Inches", 3: "Centimetres" },
@@ -235,7 +235,7 @@ function formatDMS(arr, ref) {
     const dec = d + m / 60 + s / 3600;
     const signed = (ref === "S" || ref === "W") ? -dec : dec;
     // Some cameras store decimal minutes with a zero seconds field
-    const label = s === 0 && !Number.isInteger(m) ? `${d}deg ${m}'` : `${d}deg ${m}' ${s}"`;
+    const label = s === 0 && !Number.isInteger(m) ? `${d} deg ${m}'` : `${d} ${m}' ${s}"`;
     return `${label} ${ref || ""} (${signed.toFixed(6)})`;
 }
 
@@ -254,7 +254,7 @@ function describeTag(ifd, tag, value, entry, ctx = {}) {
         display = value.map(v => ["-", "Y", "Cb", "Cr", "R", "G", "B"][v] ?? v).join("");
     else if (name === "GPSLatitude") display = formatDMS(value, ctx.GPSLatitudeRef);
     else if (name === "GPSLongitude") display = formatDMS(value, ctx.GPSLongitudeRef);
-    else if (name === "GPSImgDirection" || name === "GPSTrack") display = `${(+value).toFixed(2)}°`;
+    else if (name === "GPSImgDirection" || name === "GPSTrack") display = `${(+value).toFixed(2)}deg`;
     else if (name === "FNumber") display = `f/${(+value).toFixed(1)}`;
     else if (name === "ExposureTime") display = value > 0 && value < 1 ? `1/${Math.round(1 / value)} s` : `${value} s`;
     else if (name === "FocalLength" || name === "FocalLengthIn35mmFilm") display = `${value} mm`;
