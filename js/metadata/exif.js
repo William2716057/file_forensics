@@ -235,7 +235,7 @@ function formatDMS(arr, ref) {
     const dec = d + m / 60 + s / 3600;
     const signed = (ref === "S" || ref === "W") ? -dec : dec;
     // Some cameras store decimal minutes with a zero seconds field
-    const label = s === 0 && !Number.isInteger(m) ? `${d}° ${m}'` : `${d}° ${m}' ${s}"`;
+    const label = s === 0 && !Number.isInteger(m) ? `${d}deg ${m}'` : `${d}deg ${m}' ${s}"`;
     return `${label} ${ref || ""} (${signed.toFixed(6)})`;
 }
 
