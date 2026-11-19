@@ -446,3 +446,18 @@ previews
     outline: 2px solid red;
     outline-offset: -2px;
 }
+
+.coffee-link {
+    display: inline-block;
+    margin: 0 0 12px 12px;
+    padding: 6px 14px;
+    background: #ffdd00;
+    color: #111;
+    border-radius: 4px;
+    font-size: 13px;
+    text-decoration: none;
+}
+
+    .coffee-link:hover {
+        background: #ffe94d;
+    }
