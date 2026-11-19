@@ -132,6 +132,15 @@ tbody tr:nth-child(even) {
             cursor: not-allowed;
         }
 
+.lsb-text {
+    margin: 4px 0 10px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: #e0a030;
+    max-height: 160px;
+    overflow: auto;
+}
+
 /*left ascii column*/
 .ascii {
     text-align: left;

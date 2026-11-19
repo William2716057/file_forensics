@@ -40,4 +40,4 @@ http.createServer(function (req, res) {
     });
 }).listen(port);
 
-console.log('Server running at http://127.0.0.1:1337:' + port + '/');
+console.log('Server running at http://127.0.0.1:' + port + '/');

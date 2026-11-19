@@ -463,8 +463,10 @@ function updateToolbarState() {
     document.getElementById("saveMode").disabled = currentBytes.length === 0;
     document.getElementById("shiftLeftBtn").disabled = currentBytes.length === 0;
     document.getElementById("shiftRightBtn").disabled = currentBytes.length === 0;
+    document.getElementById("lsbBtn").disabled = currentBytes.length === 0 || !LSB_TYPES.has(detectFileType(currentBytes));
     document.getElementById("undoBtn").disabled = undoStack.length === 0;
     document.getElementById("redoBtn").disabled = redoStack.length === 0;
+
 }
 function updateMeta() {
     const metaEl = document.getElementById("meta");
@@ -548,6 +550,7 @@ fileInput.addEventListener("change", (event) => {
 
     reader.onload = (e) => {
         clearTimeout(metaTimer); //cancel potentially pending requests from previous files
+        lsbClose();
         currentBytes = new Uint8Array(e.target.result);
         storeOriginalHash(currentBytes);
         currentFileName = file.name;
@@ -618,6 +621,8 @@ document.getElementById("shiftRightBtn").addEventListener("click", () => bitShif
 document.getElementById("undoBtn").addEventListener("click", undo);
 document.getElementById("redoBtn").addEventListener("click", redo);
 document.getElementById("editByteBtn").addEventListener("click", () => startEdit(false));
+document.getElementById("lsbBtn").addEventListener("click", toggleLsb);
+//document.getElementById("lsbBtn").disabled = currentBytes.length === 0 || !LSB_TYPES.has(detectFileType(currentBytes));
 
 document.addEventListener("keydown", (e) => {
     if (!(e.ctrlKey || e.metaKey)) return;
