@@ -19,3 +19,5 @@ const FILE_SIGNATURES = [ //match byte patterns
     { type: "TIFF image", offset: 0, bytes: ["49", "49", "2a", "00"] },   // little-endian
     { type: "TIFF image", offset: 0, bytes: ["4d", "4d", "00", "2a"] },   // big-endian
 ];
+
+//add code to check against heuristics for true or false file headers
