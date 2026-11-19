@@ -547,6 +547,7 @@ fileInput.addEventListener("change", (event) => {
     const reader = new FileReader();
 
     reader.onload = (e) => {
+        clearTimeout(metaTimer); //cancel potentially pending requests from previous files
         currentBytes = new Uint8Array(e.target.result);
         storeOriginalHash(currentBytes);
         currentFileName = file.name;
