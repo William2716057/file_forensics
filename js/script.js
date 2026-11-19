@@ -542,7 +542,7 @@ fileInput.addEventListener("change", (event) => {
     const file = event.target.files[0];
     if (!file) return;
 
-    metaEl.textContent = `Reading "${file.name}" ? ${file.size.toLocaleString()} bytes`;
+    metaEl.textContent = `Reading "${file.name}" ? ${file.size.toLocaleString()} bytes`; //fix
 
     const reader = new FileReader();
 
