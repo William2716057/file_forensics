@@ -100,7 +100,7 @@ const ENUMS = {
     Orientation: {
         1: "Normal", 2: "Mirrored horizontal", 3: "Rotated 180 deg", 4: "Mirrored vertical",
         5: "Mirrored horizontal, rotated 270 deg CW", 6: "Rotated 90 deg CW",
-        7: "Mirrored horizontal, rotated 90 deg CW", 8: "Rotated 270 deg CW"
+        7: "Mirrored horizontal, rotated 90 deg CW", 8: "Rotated 270   CW"
     },
     ResolutionUnit: { 1: "None", 2: "Inches", 3: "Centimetres" },
     FocalPlaneResolutionUnit: { 1: "None", 2: "Inches", 3: "Centimetres" },
@@ -235,7 +235,7 @@ function formatDMS(arr, ref) {
     const dec = d + m / 60 + s / 3600;
     const signed = (ref === "S" || ref === "W") ? -dec : dec;
     // Some cameras store decimal minutes with a zero seconds field
-    const label = s === 0 && !Number.isInteger(m) ? `${d} deg ${m}'` : `${d} ${m}' ${s}"`;
+    const label = s === 0 && !Number.isInteger(m) ? `${d}deg ${m}'` : `${d} ${m}' ${s}"`;
     return `${label} ${ref || ""} (${signed.toFixed(6)})`;
 }
 

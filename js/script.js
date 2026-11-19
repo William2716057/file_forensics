@@ -217,7 +217,7 @@ function typeHexDigit(d) {
 
     editing = false;                       // revert when finished
     pendingNibble = null;
-    selectionEnd = selectedIndex;          
+    selectionEnd = selectedIndex;
     updateEditButtons();
     renderTable();
     refreshMetaSoon();

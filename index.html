@@ -21,6 +21,7 @@
                 <button id="binViewBtn">Bin</button>
                 <button id="shiftLeftBtn" disabled>Shift Left</button>
                 <button id="shiftRightBtn" disabled>Shift Right</button>
+                <button id="lsbBtn" disabled>Check Least Significant Bits</button>
                 <select id="saveMode" disabled>
                     <option value="reversed">Reversed file</option>
                     <option value="hex">Hex text (.txt)</option>
@@ -88,7 +89,7 @@
         <script src="js/metadata/handlers.js"></script>
         <script src="js/preview.js"></script>
         <script src="js/script.js"></script>
-
+        <script src="js/lsb.js"></script>
 </body>
 </html>
 
@@ -116,7 +117,9 @@ bitshifting left or right option (still lossy at start and end)
 need unselect hex when shifting single byte
 fix display when scaling between binary and hex
 visual entropy display
-large-file virtualization. -->
+large-file virtualization. 
+least bit steganography
+condisions for files that are packed in header or contain filler bytes-->
 
 <!--uses and features-->
 <!--detecting and repairing corrupted files in realtime-->

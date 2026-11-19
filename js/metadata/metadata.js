@@ -114,6 +114,7 @@ function entropyLabel(e) { //adjust here
 }
 
 //let hashToken = 0; // discards results from older renders
+/*
 async function fillSha256(byteArray) {
     const token = ++hashToken;
     const el = document.getElementById("metaSha256");
@@ -121,7 +122,7 @@ async function fillSha256(byteArray) {
     const buf = await crypto.subtle.digest("SHA-256", byteArray);
     if (token !== hashToken) return;
     el.textContent = Array.from(new Uint8Array(buf), hex2).join("");
-}
+}*/
 function renderMetaPanel(file, byteArray) {
     const container = document.getElementById("metaPanelContent");
 
