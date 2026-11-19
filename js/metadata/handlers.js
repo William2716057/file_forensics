@@ -94,7 +94,7 @@ function walkGif(bytes) {
     rows.push(hRow("GIF", "Dimensions", `${v.getUint16(6, true)} x ${v.getUint16(8, true)}`, 6));
 
     let p = 13, frames = 0, ended = false;
-    if (bytes[10] & 0x80) p += 3 * (1 << ((bytes[10] & 7) + 1));     // global colour table
+    if (bytes[10] & 0x80) p += 3 * (1 << ((bytes[10] & 7) + 1));     //global colour table
     const skipSub = q => { while (q < bytes.length && bytes[q]) q += bytes[q] + 1; return q + 1; };
 
     while (p < bytes.length) {
